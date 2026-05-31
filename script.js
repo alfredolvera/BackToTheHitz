@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         vinylRecord.classList.remove('spinning');
         scanAgainButton.classList.remove('visible');
         showScreen(scannerScreen);
+        qrStatusElement.textContent = "Buscando una tarjeta en la línea del tiempo...";
         if (!qrScanner) qrScanner = new Html5Qrcode("qr-reader");
         const qrboxSize = getScannerBoxSize();
         document.getElementById('qr-reader').style.setProperty('--scan-box-size', `${qrboxSize}px`);
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             qrbox: { width: qrboxSize, height: qrboxSize },
             aspectRatio: 1
         };
-        qrScanner.start({ facingMode: "environment" }, config, onScanSuccess).catch(err => qrStatusElement.textContent = "Error: No se pudo acceder a la cámara.");
+        qrScanner.start({ facingMode: "environment" }, config, onScanSuccess).catch(err => qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador.");
     }
 
     function getScannerBoxSize() {
@@ -107,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function onScanSuccess(decodedText) {
+        qrStatusElement.textContent = "QR detectado. Preparando viaje temporal...";
         qrScanner.stop().then(() => {
             try {
                 const params = new URLSearchParams(decodedText);
