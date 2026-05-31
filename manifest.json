@@ -1,0 +1,22 @@
+{
+  "name": "Back to the Hitz",
+  "short_name": "Hitz",
+  "description": "Adivina el año de los Hitz de música, cine y video juegos escaneando tarjetas.",
+  "start_url": ".",
+  /* CAMBIO: De "standalone" a "fullscreen" */
+  "display": "fullscreen", 
+  "background_color": "#0c143c", /* Ajustado al nuevo color de fondo */
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

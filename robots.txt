@@ -1,0 +1,5 @@
+# Este archivo le dice a todos los crawlers (User-agent: *)
+# que no visiten ninguna página del sitio (Disallow: /).
+
+User-agent: *
+Disallow: /

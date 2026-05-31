@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back to the Hitz</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1a1a1a"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="video-background-container">
+        <div id="background-player"></div>
+    </div>
+
+    <main id="app">
+        <div id="initial-screen" class="screen active">
+            <img id="logo" src="weblogo.png" alt="Back to the Hitz Logo">
+            <div class="actions-container">
+                <button id="start-scan-button" class="action-button">¡Inicia el juego y escanea!</button>
+                <a href="rules.html" id="rules-button">Mira las reglas</a>
+            </div>
+            <footer class="site-footer">
+                <p><B>NO COMPATIBLE CON SAFARI</B>. 2026. Por Alfredo, dedicado para el amor de su vida: Rebeca. 💖</p>
+            </footer>
+        </div>
+
+        <div id="scanner-screen" class="screen">
+            <div id="qr-reader"></div>
+            <div id="qr-reader-status">Apunta con la cámara trasera al código QR de una tarjeta...</div>
+        </div>
+        
+        <div id="player-container" class="screen">
+            <div id="wave-background">
+                <div class="wave"></div><div class="wave"></div><div class="wave"></div>
+            </div>
+            <div id="starfield" class="fullscreen-bg">
+                <div id="stars1"></div><div id="stars2"></div><div id="stars3"></div>
+            </div>
+            <div id="music-visualizer-container" class="screen-overlay">
+                <h1>Escucha con atención...</h1>
+                <div id="vinyl-record">
+                    <div class="label"></div><div class="shine"></div>
+                </div>
+            </div>
+            <div id="player"></div>
+            <div id="click-blocker"></div>
+            <div id="countdown-message" class="screen-overlay">
+                <div class="countdown-text-container">
+                    <span class="small-text">Iniciando viaje en el tiempo…</span>
+                    <span class="large-text">¡Tienes menos de un minuto para adivinar el año en el que salió!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAMBIOS EN LA PANTALLA FINAL -->
+        <div id="times-up-screen" class="screen">
+            <!-- Se cambia de .jpg a .gif -->
+            <img src="biff.gif" alt="Biff Tannen" class="times-up-image">
+            <!-- Se reestructura el H1 para estilizar cada línea -->
+            <h1>
+                <span class="line-one">¡Es momento de adivinar!</span>
+                <span class="line-two">¿O qué, eres gallina?</span>
+            </h1>
+        </div>
+    </main>
+
+    <button id="scan-again-button" class="action-button floating">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <span>Escanear otra</span>
+    </button>
+    
+    <audio id="background-music" loop>
+        <source src="main.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="script.js"></script>
+</body>
+</html>

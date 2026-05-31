@@ -1,0 +1,97 @@
+/* --- CSS CON TEXTO FINAL ESTILIZADO --- */
+body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    background-color: #000; 
+    color: #fff; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+}
+
+#video-background-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.4; overflow: hidden; }
+#background-player { position: absolute; top: 50%; left: 50%; width: 177.77vh; min-width: 100vw; height: 56.25vw; min-height: 100vh; transform: translate(-50%, -50%); pointer-events: none; }
+#app { width: 100%; height: 100%; position: relative; z-index: 1; overflow: hidden; }
+.screen { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+.screen.active { display: flex; }
+#initial-screen { background-color: transparent; }
+#scanner-screen, #player-container { background-color: #000; }
+#times-up-screen { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradient 15s ease infinite; }
+#logo { max-width: 85%; width: 380px; margin-bottom: 20px; }
+.actions-container { display: flex; flex-direction: column; align-items: center; }
+#initial-screen .action-button { margin-top: 40px; }
+#rules-button { margin-top: 20px; font-size: 1rem; padding: 10px 22px; background-color: transparent; color: #aaa; border: 1px solid #444; border-radius: 8px; cursor: pointer; transition: background-color 0.2s, color 0.2s; text-decoration: none; }
+#rules-button:hover { background-color: #1a1a1a; color: #fff; }
+.action-button { font-size: 1.2rem; padding: 12px 25px; background-color: #1a1a1a; color: white; border: 1px solid #444; border-radius: 8px; cursor: pointer; transition: background-color 0.2s, transform 0.2s; display: flex; align-items: center; gap: 10px; }
+.action-button:hover { background-color: #333; }
+.site-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; padding: 0 20px; box-sizing: border-box; }
+.site-footer p { font-size: 0.8rem; color: rgba(255, 255, 255, 0.7); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); margin: 0; }
+#scanner-screen { justify-content: space-around; }
+#qr-reader { width: 85vw; height: 85vw; max-width: 85vh; max-height: 85vh; border: 3px solid #444; border-radius: 8px; overflow: hidden; }
+#qr-reader_dashboard { display: none; }
+#qr-reader-status { margin-top: 0; }
+#player-container { padding: 0; position: relative; overflow: hidden; }
+#player { width: 100%; height: 100%; aspect-ratio: 16 / 9; opacity: 0; transition: opacity 0.8s ease-in-out; position: relative; z-index: 2; }
+#player.ready { opacity: 1; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+#music-visualizer-container { z-index: 6; flex-direction: column; gap: 30px; }
+#music-visualizer-container h1 { font-size: 2rem; color: rgba(255, 255, 255, 0.9); text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+#vinyl-record { width: 60vmin; aspect-ratio: 1 / 1; background: radial-gradient(circle, #222 10%, #111 11%, #111 100%); border-radius: 50%; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
+#vinyl-record.spinning { animation: spin 3s linear infinite; }
+#vinyl-record .label { width: 35%; height: 35%; background: radial-gradient(circle, #e6b3b3 0%, #d9534f 100%); border-radius: 50%; border: 1px solid #c9302c; position: relative; }
+#vinyl-record .label::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 15%; height: 15%; background: #000; border-radius: 50%; }
+#vinyl-record .shine { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 40%); }
+#click-blocker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+
+.times-up-image { width: 90%; max-width: 590px; height: auto; margin-bottom: 25px; border-radius: 8px; }
+/* CAMBIO: Se ajustan los estilos del H1 para que contenga los spans */
+#times-up-screen h1 { 
+    font-size: 1em; /* El tamaño se define en los spans */
+    line-height: 1.3;
+}
+#times-up-screen h1 span {
+    display: block; /* Para que cada uno ocupe una línea */
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+}
+#times-up-screen .line-one {
+    font-size: 2rem;
+    color: #fff;
+}
+#times-up-screen .line-two {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #ffc107; /* Color amarillo/dorado */
+    margin-top: 10px;
+}
+
+.screen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-out; }
+.screen-overlay.visible { opacity: 1; }
+#countdown-message { color: white; z-index: 11; }
+.countdown-text-container { display: flex; flex-direction: column; align-items: center; }
+.countdown-text-container .small-text { font-size: 1.6rem; font-weight: 300; color: rgba(255, 255, 255, 0.8); }
+.countdown-text-container .large-text { font-size: 2.8rem; font-weight: 600; color: #ffc107; text-shadow: 1px 1px 5px rgba(0,0,0,0.7); margin-top: 10px; margin-left: 10%; margin-right: 10%; }
+.fullscreen-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-out; z-index: 1; }
+.fullscreen-bg.visible { opacity: 1; }
+@keyframes zoom-and-fade { 0% { transform: scale(0.1); opacity: 0; } 10% { opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+#stars1, #stars2, #stars3 { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: block; background-color: transparent; animation-name: zoom-and-fade; animation-timing-function: linear; animation-iteration-count: infinite; }
+#stars1 { background-image: radial-gradient(1px 1px at 20px 30px, #eee, transparent), radial-gradient(1px 1px at 40px 70px, #fff, transparent), radial-gradient(1px 1px at 50px 160px, #ddd, transparent), radial-gradient(2px 2px at 90px 40px, #fff, transparent), radial-gradient(2px 2px at 130px 80px, #fff, transparent), radial-gradient(2px 2px at 160px 120px, #ddd, transparent); background-size: 200px 200px; animation-duration: 2s; }
+#stars2 { background-image: radial-gradient(1px 1px at 10px 90px, #eee, transparent), radial-gradient(2px 2px at 30px 50px, #fff, transparent), radial-gradient(2px 2px at 70px 200px, #ddd, transparent), radial-gradient(2px 2px at 100px 150px, #fff, transparent), radial-gradient(1px 1px at 140px 110px, #fff, transparent), radial-gradient(2px 2px at 180px 60px, #ddd, transparent); background-size: 250px 250px; animation-duration: 3s; }
+#stars3 { background-image: radial-gradient(2px 2px at 5px 150px, #eee, transparent), radial-gradient(3px 3px at 80px 30px, #fff, transparent), radial-gradient(2px 2px at 120px 220px, #ddd, transparent), radial-gradient(3px 3px at 190px 180px, #fff, transparent), radial-gradient(2px 2px at 240px 90px, #fff, transparent), radial-gradient(3px 3px at 220px 20px, #ddd, transparent); background-size: 300px 300px; animation-duration: 4s; }
+#scan-again-button { position: absolute; bottom: 25px; right: 25px; z-index: 150; display: none; }
+#scan-again-button.visible { display: flex; }
+@keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes wave-pulse { 0% { transform: scale(0.1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
+#wave-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #0c143c; overflow: hidden; z-index: 4; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out; }
+#wave-background.visible { opacity: 1; }
+.wave { position: absolute; top: 50%; left: 50%; transform-origin: center center; width: 300px; height: 300px; margin-left: -150px; margin-top: -150px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.15); animation: wave-pulse 4s ease-out infinite; }
+.wave:nth-of-type(2) { animation-delay: 1.3s; }
+.wave:nth-of-type(3) { animation-delay: 2.6s; }
+@media (orientation: landscape) {
+    #initial-screen { flex-direction: column !important; justify-content: center; }
+    #logo { max-width: 30vh; max-height: 250px; margin-bottom: 20px; }
+    .actions-container { gap: 15px; }
+    #initial-screen .action-button, #rules-button { margin-top: 0; }
+    .site-footer { position: absolute; bottom: 15px; margin-top: 0; }
+    #times-up-screen { flex-direction: row; gap: 25px; padding: 20px 40px; }
+    .times-up-image { width: 45%; max-width: 400px; margin-bottom: 0; }
+    #times-up-screen h1 { text-align: left; }
+    #times-up-screen .line-one { font-size: 1.8rem; } /* Ajuste para landscape */
+    #times-up-screen .line-two { font-size: 2.2rem; } /* Ajuste para landscape */
+}
