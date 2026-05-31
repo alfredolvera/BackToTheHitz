@@ -90,8 +90,20 @@ document.addEventListener('DOMContentLoaded', () => {
         scanAgainButton.classList.remove('visible');
         showScreen(scannerScreen);
         if (!qrScanner) qrScanner = new Html5Qrcode("qr-reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        const qrboxSize = getScannerBoxSize();
+        document.getElementById('qr-reader').style.setProperty('--scan-box-size', `${qrboxSize}px`);
+        const config = {
+            fps: 10,
+            qrbox: { width: qrboxSize, height: qrboxSize },
+            aspectRatio: 1
+        };
         qrScanner.start({ facingMode: "environment" }, config, onScanSuccess).catch(err => qrStatusElement.textContent = "Error: No se pudo acceder a la cámara.");
+    }
+
+    function getScannerBoxSize() {
+        const shortestViewportSide = Math.min(window.innerWidth, window.innerHeight);
+        const comfortableSize = Math.round(shortestViewportSide * 0.68);
+        return Math.max(220, Math.min(comfortableSize, 360));
     }
 
     function onScanSuccess(decodedText) {
