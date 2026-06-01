@@ -455,6 +455,10 @@ a:focus-visible {
     z-index: 10;
 }
 
+#player-container.needs-gesture #click-blocker {
+    display: none;
+}
+
 #times-up-screen {
     gap: 24px;
     background:
@@ -851,7 +855,9 @@ a:focus-visible {
         position: absolute !important;
         inset: 0 !important;
         width: 100vw !important;
+        width: 100dvw !important;
         height: 100vh !important;
+        height: 100dvh !important;
         max-width: none !important;
         max-height: none !important;
         aspect-ratio: auto;
