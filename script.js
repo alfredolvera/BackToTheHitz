@@ -111,7 +111,25 @@ document.addEventListener('DOMContentLoaded', () => {
             qrbox: { width: qrboxSize, height: qrboxSize },
             aspectRatio: 1
         };
-        qrScanner.start({ facingMode: "environment" }, config, onScanSuccess).catch(err => qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador.");
+        startQrScanner(config);
+    }
+
+    function startQrScanner(config) {
+        qrScanner.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess)
+            .catch(() => startQrScannerWithFallbackCamera(config));
+    }
+
+    function startQrScannerWithFallbackCamera(config) {
+        Html5Qrcode.getCameras()
+            .then(cameras => {
+                if (!cameras || cameras.length === 0) throw new Error("No camera found");
+                const preferredCamera = cameras.find(camera => /back|rear|environment|trasera|posterior/i.test(camera.label)) || cameras[0];
+                return qrScanner.start(preferredCamera.id, config, onScanSuccess);
+            })
+            .catch(err => {
+                console.error("Camera access failed", err);
+                qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador o prueba con otra cámara.";
+            });
     }
 
     function getScannerBoxSize() {
@@ -197,8 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     window.myAppScope.createPlayer = createPlayer;
 
-    function onPlayerReady() {
-        startPreparationCountdown();
+    function onPlayerReady(event) {
+        event.target.playVideo();
     }
 
     function onPlayerStateChange(event) {
