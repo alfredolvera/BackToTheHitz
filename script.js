@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gamePlayer = null; preparationTimer = null; gameTimer = null;
         currentGameCategory = null;
         getOrCreatePlayerElement().classList.remove('ready');
-        playerContainer.classList.remove('needs-gesture');
+        playerContainer.classList.remove('needs-gesture', 'video-ready');
         countdownMessage.classList.remove('visible');
         starfield.classList.remove('visible');
         waveBackground.classList.remove('visible');
@@ -227,11 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
         countdownMessage.classList.remove('visible');
         starfield.classList.remove('visible');
         if (currentGameCategory === 'musica_audio') {
+            playerContainer.classList.remove('video-ready');
             waveBackground.classList.add('visible');
             musicVisualizerContainer.classList.add('visible');
             vinylRecord.classList.add('spinning');
-        } else if (playerElement) {
-            playerElement.classList.add('ready');
+        } else {
+            playerContainer.classList.add('video-ready');
+            if (playerElement) playerElement.classList.add('ready');
         }
         if (gameTimer === null) gameTimer = setTimeout(endGame, GAME_DURATION_MS);
     }
@@ -239,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function endGame(){
         const playerElement = document.getElementById('player');
         if (playerElement) playerElement.classList.remove('ready');
+        playerContainer.classList.remove('video-ready');
         warpSpeedSound.pause();
         warpSpeedSound.currentTime = 0;
         waveBackground.classList.remove('visible');
