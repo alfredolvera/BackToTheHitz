@@ -62,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null;
     let currentGameCategory = null;
     let replacements = {};
+    let lastCameraId = null;
+    let isScannerRunning = false;
 
     fetch('replacements.json').then(response => response.json()).then(data => { replacements = data; console.log("Replacements loaded."); }).catch(console.error);
 
@@ -72,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         screenElement.classList.add('active');
     }
 
-    function startScanning() {
+    async function startScanning() {
         backgroundMusic.pause(); // Detener música de fondo
         if (gamePlayer) gamePlayer.destroy();
         if (preparationTimer) clearTimeout(preparationTimer);
@@ -91,14 +93,73 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen(scannerScreen);
         qrStatusElement.textContent = "Buscando una tarjeta en la línea del tiempo...";
         if (!qrScanner) qrScanner = new Html5Qrcode("qr-reader");
+        if (isScannerRunning) await stopScanner();
         const qrboxSize = getScannerBoxSize();
         document.getElementById('qr-reader').style.setProperty('--scan-box-size', `${qrboxSize}px`);
         const config = {
             fps: 10,
-            qrbox: { width: qrboxSize, height: qrboxSize },
-            aspectRatio: 1
+            qrbox: { width: qrboxSize, height: qrboxSize }
         };
-        qrScanner.start({ facingMode: "environment" }, config, onScanSuccess).catch(err => qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador.");
+
+        try {
+            await startScannerWithBestCamera(config);
+            isScannerRunning = true;
+        } catch (err) {
+            console.error("No se pudo iniciar el escáner QR", err);
+            qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador o prueba con otra cámara.";
+        }
+    }
+
+
+    async function startScannerWithBestCamera(config) {
+        const cameraId = await getPreferredCameraId();
+        if (cameraId) {
+            try {
+                await qrScanner.start(cameraId, config, onScanSuccess, onScanFailure);
+                return;
+            } catch (err) {
+                console.warn("No se pudo iniciar la cámara seleccionada; probando con facingMode.", err);
+                lastCameraId = null;
+            }
+        }
+
+        await qrScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+    }
+
+    async function getPreferredCameraId() {
+        if (lastCameraId) return lastCameraId;
+
+        try {
+            const cameras = await Html5Qrcode.getCameras();
+            if (!cameras || cameras.length === 0) return null;
+
+            const environmentCamera = cameras.find(camera => {
+                const label = (camera.label || '').toLowerCase();
+                return label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('trasera');
+            });
+            lastCameraId = (environmentCamera || cameras[0]).id;
+            return lastCameraId;
+        } catch (err) {
+            console.warn("No se pudo enumerar cámaras; se usará facingMode.", err);
+            return null;
+        }
+    }
+
+    async function stopScanner() {
+        if (!qrScanner || !isScannerRunning) return;
+
+        try {
+            await qrScanner.stop();
+        } catch (err) {
+            console.warn("No se pudo detener el escáner QR", err);
+        } finally {
+            isScannerRunning = false;
+        }
+    }
+
+    function onScanFailure() {
+        // html5-qrcode llama esta función continuamente cuando no detecta códigos.
+        // La dejamos silenciosa para no llenar la consola ni parpadear el estado.
     }
 
     function getScannerBoxSize() {
@@ -107,32 +168,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.max(220, Math.min(comfortableSize, 360));
     }
 
-    function onScanSuccess(decodedText) {
+    async function onScanSuccess(decodedText) {
         qrStatusElement.textContent = "QR detectado. Preparando viaje temporal...";
-        qrScanner.stop().then(() => {
-            try {
-                const params = new URLSearchParams(decodedText);
-                let videoId = null, detectedCategory = null;
-                let startTime = params.get('s');
-                if (params.has('c')) { detectedCategory = 'cine'; videoId = params.get('c'); } 
-                else if (params.has('g')) { detectedCategory = 'juego'; videoId = params.get('g'); } 
-                else if (params.has('mv')) { detectedCategory = 'musica_video'; videoId = params.get('mv'); } 
-                else if (params.has('ma')) { detectedCategory = 'musica_audio'; videoId = params.get('ma'); }
-                if (videoId && videoId.length > 5) {
-                    if (replacements[videoId]) {
-                        const r = replacements[videoId];
-                        videoId = r.videoId;
-                        startTime = r.startTime || null;
-                    }
-                    playVideo(videoId, detectedCategory, startTime);
-                } else { throw new Error("Formato QR no reconocido."); }
-            } catch (error) {
-                qrStatusElement.textContent = "Código QR no válido. Inténtalo de nuevo.";
-                setTimeout(() => startScanning(), 2000);
-            }
-        });
+        await stopScanner();
+        try {
+            const params = new URLSearchParams(decodedText);
+            let videoId = null, detectedCategory = null;
+            let startTime = params.get('s');
+            if (params.has('c')) { detectedCategory = 'cine'; videoId = params.get('c'); }
+            else if (params.has('g')) { detectedCategory = 'juego'; videoId = params.get('g'); }
+            else if (params.has('mv')) { detectedCategory = 'musica_video'; videoId = params.get('mv'); }
+            else if (params.has('ma')) { detectedCategory = 'musica_audio'; videoId = params.get('ma'); }
+            if (videoId && videoId.length > 5) {
+                if (replacements[videoId]) {
+                    const r = replacements[videoId];
+                    videoId = r.videoId;
+                    startTime = r.startTime || null;
+                }
+                playVideo(videoId, detectedCategory, startTime);
+            } else { throw new Error("Formato QR no reconocido."); }
+        } catch (error) {
+            qrStatusElement.textContent = "Código QR no válido. Inténtalo de nuevo.";
+            setTimeout(() => startScanning(), 2000);
+        }
     }
-    
+
     function playVideo(videoId, videoCategory, startTime) {
         showScreen(playerContainer);
         scanAgainButton.classList.add('visible');
@@ -149,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }
-    
+
     function createPlayer(videoId, videoCategory, startTime) {
         if (gamePlayer) gamePlayer.destroy();
         gamePlayer = null;
@@ -161,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (startTime) playerVars.start = parseInt(startTime, 10);
         gamePlayer = new YT.Player('player', { videoId: videoId, playerVars: playerVars, events: { 'onStateChange': onPlayerStateChange } });
     }
-    
+
     window.myAppScope.createPlayer = createPlayer;
 
     function onPlayerStateChange(event) {
@@ -181,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 7000);
         }
     }
-    
+
     function endGame(){
         const playerElement = document.getElementById('player');
         if (playerElement) playerElement.classList.remove('ready');
