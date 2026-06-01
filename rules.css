@@ -306,46 +306,162 @@ strong {
     box-shadow: 0 0 38px rgba(255, 193, 7, 0.54), 0 18px 34px rgba(0, 0, 0, 0.44);
 }
 
-@media (max-width: 820px) {
-    .rules-grid,
-    .mode-summary {
-        grid-template-columns: 1fr;
-    }
 
-    #rules-container {
-        margin-top: 18px;
-    }
-}
-
-@media (max-width: 560px) {
+/* Rules are optimized for landscape 16:9 play sessions. */
+@media (orientation: landscape) {
     .rules-topbar {
-        padding: 12px 14px;
-    }
-
-    .rules-brand {
-        font-size: 0.72rem;
-    }
-
-    .topbar-link span,
-    .floating-button span {
-        display: none;
+        min-height: clamp(48px, 7vh, 64px);
+        padding: clamp(8px, 1.6vh, 14px) clamp(24px, 4vw, 54px);
     }
 
     #rules-container {
-        width: min(100% - 20px, 1100px);
-        padding: 20px 16px 86px;
-        border-radius: 22px;
+        width: min(94vw, 1320px);
+        margin: min(3vh, 28px) auto min(5vh, 42px);
+        padding: min(4vh, 42px) min(4vw, 56px);
+    }
+
+    .rules-hero {
+        max-width: 980px;
+        margin-bottom: min(4vh, 34px);
+    }
+
+    h1 {
+        font-size: clamp(2.3rem, 5vw, 4.8rem);
+    }
+
+    .rules-intro {
+        max-width: 760px;
+        font-size: clamp(0.9rem, 1.35vw, 1.18rem);
+    }
+
+    .rules-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: min(2vw, 22px);
+    }
+
+    .rule-card {
+        padding: min(3vh, 28px) min(2.2vw, 32px);
+    }
+
+    .rule-card.featured {
+        grid-column: 1 / -1;
+    }
+
+    .mode-summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     p,
     li {
-        font-size: 1rem;
+        font-size: clamp(0.88rem, 1.15vw, 1.04rem);
     }
 
     .floating-button {
-        right: 16px;
-        bottom: 16px;
-        padding: 12px 14px;
+        right: min(2vw, 25px);
+        bottom: min(3vh, 25px);
+    }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+    .rules-topbar {
+        min-height: 42px;
+        padding-block: 7px;
+    }
+
+    .rules-brand {
+        font-size: 0.7rem;
+    }
+
+    .topbar-link,
+    .floating-button {
+        min-height: 36px;
+        padding: 7px 13px;
+        font-size: 0.82rem;
+    }
+
+    #rules-container {
+        padding: 18px 28px 56px;
+    }
+
+    .rules-hero {
+        margin-bottom: 18px;
+    }
+
+    .rules-kicker {
+        margin-bottom: 8px;
+        padding: 5px 11px;
+        font-size: 0.62rem;
+    }
+
+    h1 {
+        font-size: clamp(2rem, 4.4vw, 3.2rem);
+    }
+
+    h2 {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        font-size: clamp(1.15rem, 2vw, 1.55rem);
+    }
+
+    h3 {
+        margin: 16px 0 8px;
+        font-size: 1rem;
+    }
+
+    .rule-card {
+        padding: 16px 20px;
+    }
+
+    p,
+    li {
+        font-size: 0.86rem;
+        line-height: 1.48;
+    }
+
+    li {
+        margin-bottom: 6px;
+    }
+
+    .mode-summary {
+        gap: 8px;
+        margin: 14px 0 6px;
+    }
+
+    .mode-pill,
+    .note,
+    .rules-callout {
+        padding: 10px 12px;
+    }
+}
+
+@media (orientation: portrait) {
+    body {
+        overflow: hidden;
+    }
+
+    .rules-topbar,
+    #rules-container,
+    .floating-button {
+        display: none !important;
+    }
+
+    body::after {
+        content: 'Gira tu dispositivo para leer las reglas en landscape 16:9';
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        padding: 12vw;
+        color: var(--color-primary);
+        background:
+            radial-gradient(circle at 50% 20%, rgba(35, 213, 255, 0.22), transparent 36%),
+            linear-gradient(135deg, #03030a, #0c143c);
+        font-size: clamp(1.6rem, 8vw, 3rem);
+        font-weight: 900;
+        line-height: 1.15;
+        text-align: center;
+        text-shadow: 0 0 24px rgba(255, 193, 7, 0.34);
     }
 }
 

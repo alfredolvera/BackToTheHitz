@@ -710,74 +710,321 @@ a:focus-visible {
     to { transform: translateX(0); }
 }
 
-@media (orientation: landscape) and (max-height: 620px) {
+
+/* Landscape-first 16:9 experience. Portrait layouts are intentionally disabled. */
+@media (orientation: landscape) {
+    body {
+        overflow: hidden;
+    }
+
+    .screen {
+        overflow: hidden;
+    }
+
     #initial-screen {
-        justify-content: center;
-        gap: 12px;
+        display: none;
+        grid-template-rows: 1fr auto;
+        gap: min(2.2vh, 18px);
+        padding: min(3.2vh, 28px) min(4vw, 56px);
+    }
+
+    #initial-screen.active {
+        display: grid;
     }
 
     .hero-card {
+        align-self: end;
         display: grid;
-        grid-template-columns: minmax(180px, 0.8fr) 1fr;
+        grid-template-columns: minmax(230px, 0.86fr) minmax(360px, 1.14fr);
+        grid-template-areas:
+            "logo badge"
+            "logo copy"
+            "logo actions";
         align-items: center;
-        gap: 20px;
-        padding: 22px;
+        width: min(88vw, 1180px);
+        max-height: 76vh;
+        padding: min(4.8vh, 42px) min(3.6vw, 56px);
+        gap: min(2.5vh, 22px) min(4vw, 58px);
     }
 
-    .hero-badge,
-    .hero-copy {
-        grid-column: 2;
+    .hero-badge {
+        grid-area: badge;
+        justify-self: start;
+        margin: 0;
+        font-size: clamp(0.62rem, 1.15vw, 0.82rem);
     }
 
     #logo {
-        grid-row: 1 / 4;
-        width: min(30vw, 250px);
+        grid-area: logo;
+        width: min(30vw, 430px);
+        max-height: 60vh;
+        object-fit: contain;
     }
 
-    .actions-container {
-        grid-column: 2;
-        margin-top: 12px;
-    }
-
-    #times-up-screen {
-        padding: 20px 40px;
-    }
-
-    .times-up-card {
-        flex-direction: row;
-        gap: 25px;
+    .hero-copy {
+        grid-area: copy;
+        max-width: 620px;
+        margin: 0;
         text-align: left;
+        font-size: clamp(0.9rem, 1.55vw, 1.22rem);
+        line-height: 1.42;
     }
 
-    .times-up-image {
-        width: 45%;
-        max-width: 400px;
-        margin-bottom: 0;
-    }
-}
-
-@media (max-width: 560px) {
     .actions-container {
-        flex-direction: column;
+        grid-area: actions;
+        justify-content: flex-start;
+        margin: 0;
+        gap: min(1.5vw, 16px);
     }
 
     .action-button,
     #rules-button {
-        width: 100%;
+        min-height: clamp(40px, 6vh, 54px);
+        padding: clamp(9px, 1.7vh, 14px) clamp(15px, 2vw, 26px);
+        font-size: clamp(0.82rem, 1.25vw, 1.05rem);
+        white-space: nowrap;
     }
 
     .site-footer {
-        border-radius: var(--radius-md);
+        align-self: start;
+        width: min(88vw, 1180px);
+        padding: min(1.5vh, 11px) 18px;
     }
 
-    #scan-again-button {
-        right: 16px;
-        bottom: 16px;
-        padding-inline: 18px;
+    .site-footer p {
+        font-size: clamp(0.62rem, 1vw, 0.82rem);
+    }
+
+    #scanner-screen {
+        display: none;
+        grid-template-columns: minmax(280px, 0.78fr) minmax(380px, 1fr);
+        grid-template-rows: 1fr auto;
+        grid-template-areas:
+            "copy scanner"
+            "status scanner";
+        gap: min(3vw, 34px);
+        padding: min(4vh, 34px) min(5vw, 72px);
+        text-align: left;
+    }
+
+    #scanner-screen.active {
+        display: grid;
+    }
+
+    .scanner-heading {
+        grid-area: copy;
+        align-self: end;
+        max-width: 460px;
+    }
+
+    .scanner-heading h1 {
+        font-size: clamp(1.8rem, 4.2vw, 4rem);
+    }
+
+    .scanner-heading p,
+    #qr-reader-status {
+        font-size: clamp(0.82rem, 1.3vw, 1.05rem);
     }
 
     #qr-reader {
-        width: min(92vw, calc(100vh - 240px));
+        grid-area: scanner;
+        align-self: center;
+        justify-self: center;
+        width: min(48vw, 76vh);
+        max-width: none;
+    }
+
+    #qr-reader-status {
+        grid-area: status;
+        align-self: start;
+        justify-self: start;
+        max-width: 460px;
+        border-radius: var(--radius-md);
+    }
+
+    #player-container.active {
+        display: block;
+    }
+
+    #player,
+    #player iframe {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto;
+    }
+
+    #music-visualizer-container {
+        flex-direction: row;
+        gap: min(5vw, 70px);
+        padding: min(4vh, 36px) min(5vw, 72px);
+    }
+
+    #music-visualizer-container h1 {
+        max-width: 38vw;
+        text-align: left;
+        font-size: clamp(1.8rem, 4vw, 4rem);
+    }
+
+    #vinyl-record {
+        width: min(36vw, 66vh);
+    }
+
+    .countdown-text-container {
+        width: min(76vw, 980px);
+        padding: min(5vh, 48px) min(4vw, 58px);
+    }
+
+    .countdown-text-container .small-text {
+        font-size: clamp(0.82rem, 1.45vw, 1.25rem);
+    }
+
+    .countdown-text-container .large-text {
+        font-size: clamp(1.6rem, 4.3vw, 4.4rem);
+    }
+
+    #times-up-screen {
+        padding: min(4vh, 34px) min(4vw, 58px);
+    }
+
+    .times-up-card {
+        flex-direction: row;
+        justify-content: center;
+        width: min(92vw, 1260px);
+        max-height: 84vh;
+        gap: min(4vw, 58px);
+        padding: min(4vh, 36px) min(4vw, 58px);
+        text-align: left;
+    }
+
+    .times-up-image {
+        width: min(38vw, 62vh);
+        max-width: none;
+        max-height: 68vh;
+        margin-bottom: 0;
+        object-fit: contain;
+    }
+
+    .times-up-copy {
+        max-width: 560px;
+    }
+
+    #scan-again-button {
+        right: min(2.2vw, 28px);
+        bottom: min(3vh, 28px);
+    }
+}
+
+@media (orientation: landscape) and (max-aspect-ratio: 16 / 10) {
+    .hero-card {
+        max-height: 72vh;
+        padding: min(3.8vh, 30px) min(3vw, 42px);
+    }
+
+    #logo {
+        width: min(26vw, 360px);
+        max-height: 54vh;
+    }
+
+    .hero-copy {
+        font-size: clamp(0.8rem, 1.35vw, 1.05rem);
+    }
+
+    .site-footer p {
+        font-size: clamp(0.56rem, 0.9vw, 0.74rem);
+    }
+
+    #qr-reader {
+        width: min(44vw, 72vh);
+    }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+    .hero-card {
+        grid-template-columns: minmax(190px, 0.7fr) minmax(360px, 1.3fr);
+        max-height: 74vh;
+        padding: 16px 28px;
+        gap: 12px 32px;
+    }
+
+    #logo {
+        width: min(24vw, 260px);
+        max-height: 48vh;
+    }
+
+    .hero-badge {
+        padding: 5px 11px;
+        font-size: 0.6rem;
+    }
+
+    .hero-copy {
+        font-size: clamp(0.74rem, 1.18vw, 0.9rem);
+        line-height: 1.28;
+    }
+
+    .action-button,
+    #rules-button {
+        min-height: 36px;
+        padding: 8px 14px;
+        font-size: 0.76rem;
+    }
+
+    .site-footer {
+        padding: 7px 14px;
+    }
+
+    .site-footer p {
+        font-size: 0.58rem;
+    }
+
+    #qr-reader {
+        width: min(40vw, 68vh);
+    }
+
+    .scanner-heading h1 {
+        font-size: clamp(1.5rem, 3.5vw, 2.8rem);
+    }
+
+    .scanner-heading p,
+    #qr-reader-status {
+        font-size: 0.78rem;
+    }
+}
+
+@media (orientation: portrait) {
+    body {
+        overflow: hidden;
+    }
+
+    #app,
+    #video-background-container,
+    #scan-again-button,
+    .rules-topbar,
+    #rules-container,
+    .floating-button {
+        display: none !important;
+    }
+
+    body::after {
+        content: 'Gira tu dispositivo para jugar en landscape 16:9';
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        padding: 12vw;
+        color: var(--color-primary);
+        background:
+            radial-gradient(circle at 50% 20%, rgba(35, 213, 255, 0.22), transparent 36%),
+            linear-gradient(135deg, #03030a, #0c143c);
+        font-size: clamp(1.6rem, 8vw, 3rem);
+        font-weight: 900;
+        line-height: 1.15;
+        text-align: center;
+        text-shadow: 0 0 24px rgba(255, 193, 7, 0.34);
     }
 }
 
