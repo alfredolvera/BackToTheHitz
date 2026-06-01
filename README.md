@@ -1,218 +1,275 @@
 # Back to the Hitz
 
-**Back to the Hitz** es una experiencia de juego de mesa y trivia pop en la que las tarjetas físicas se combinan con una web app para viajar por la historia de la música, el cine y los videojuegos.
+**Back to the Hitz** is a time-travel party board game about music, movies, and video games.
 
-Los jugadores escanean códigos QR, reciben una pista audiovisual y colocan cada tarjeta en la posición correcta de su línea del tiempo. El reto no es solo reconocer la obra: también hay que recordar si llegó antes o después que los demás hitz.
+Players scan QR-coded cards, watch or listen to the clue, and try to place each card in the correct chronological position on their personal timeline. The challenge is not only knowing pop culture, but figuring out what came before, what came after, and how each work fits into history.
 
-## Tabla de contenidos
+It is a fast, nostalgic, and competitive game built for people who love songs, films, games, trivia, and arguing about release years.
 
-- [Descripción](#descripción)
-- [Estado del proyecto](#estado-del-proyecto)
-- [Características principales](#características-principales)
-- [Cómo se juega](#cómo-se-juega)
-- [Modos de juego](#modos-de-juego)
-- [Web app](#web-app)
-- [Formato de los QR](#formato-de-los-qr)
-- [Estructura del repositorio](#estructura-del-repositorio)
-- [Desarrollo local](#desarrollo-local)
-- [Despliegue](#despliegue)
-- [Compatibilidad](#compatibilidad)
-- [Créditos](#créditos)
-- [Aviso legal](#aviso-legal)
+---
 
-## Descripción
+## Concept
 
-Biff alteró la línea del tiempo y ahora toca restaurarla colocando canciones, películas y videojuegos en orden cronológico.
+Biff Tannen has stolen the time machine and altered the timeline.
 
-Cada tarjeta representa una obra de cultura pop. Al escanear su QR, la app muestra o reproduce una pista durante un tiempo limitado. Después, el jugador debe decidir dónde colocar la tarjeta respecto a las que ya tiene en su línea del tiempo.
+Your mission is to restore the correct order of pop culture history by identifying when iconic songs, movies, and video games were released.
 
-- Las obras más antiguas van a la izquierda.
-- Las obras más recientes van a la derecha.
-- Si dos tarjetas pertenecen al mismo año, pueden colocarse en cualquier orden entre ellas.
+Each card represents a work from pop culture. Players scan the card, receive a clue, and then decide where that card belongs in their timeline.
 
-## Estado del proyecto
+Place it correctly and you keep it.
 
-Este repositorio contiene una versión estática y desplegable de la web app de **Back to the Hitz**. No utiliza un framework ni requiere instalación de dependencias para ejecutarse localmente.
+Place it incorrectly and the timeline remains broken.
 
-Incluye:
+---
 
-- Pantalla inicial del juego.
-- Escáner QR con cámara.
-- Reproductor de pistas mediante YouTube IFrame API.
-- Pantalla de cuenta regresiva y aviso para colocar la tarjeta.
-- Página de reglas en español.
-- Manifest PWA y service worker para cachear recursos principales.
-- Configuración básica para Netlify.
+## Main Features
 
-## Características principales
+* Party board game focused on music, movies, and video games
+* QR-coded cards connected to a companion web app
+* Chronological timeline gameplay
+* Multiple game modes
+* Competitive and cooperative options
+* DeLorean token system for strategy and interaction
+* Designed for nostalgia, debate, and replayability
+* Works with physical cards and a digital scanning experience
 
-- Juego de trivia cronológica con tarjetas físicas.
-- Categorías de música, películas y videojuegos.
-- Escaneo de QR desde navegador usando la cámara del dispositivo.
-- Pistas audiovisuales con videos de YouTube o modo visualizador para pistas de audio.
-- Ambientación retro inspirada en viajes temporales.
-- Fichas DeLorean para cambiar tarjetas, retar jugadas y activar ventajas.
-- Modos Original, Caos y Cooperativo.
-- Aplicación web estática compatible con hosting simple.
+---
 
-## Cómo se juega
+## How to Play
 
-1. El jugador o equipo toma una tarjeta del mazo activo.
-2. Escanea el código QR con la web app.
-3. Observa o escucha la pista sin mirar el año de la tarjeta.
-4. Coloca la tarjeta boca abajo en su línea del tiempo.
-5. Revela el año.
-6. Si la posición es correcta, conserva la tarjeta.
-7. Si la posición es incorrecta, descarta la tarjeta salvo que aplique una regla especial.
+1. Choose a card from the active deck.
+2. Scan the QR code using the Back to the Hitz web app.
+3. Watch or listen to the clue.
+4. Guess where the card belongs in your timeline.
+5. Reveal the release year.
+6. If the card was placed correctly, keep it in your timeline.
+7. If the card was placed incorrectly, discard it.
 
-El objetivo habitual es colocar correctamente **10 tarjetas** antes que los demás jugadores o equipos.
+Older works are placed to the left.
+Newer works are placed to the right.
 
-## Modos de juego
+As the timeline grows, the game becomes harder because each new card must be placed between increasingly specific years.
 
-### Modo Original
+---
 
-Cada jugador o equipo construye su propia línea del tiempo. Gana quien coloque correctamente 10 tarjetas.
+## Objective
 
-### Modo Caos
+In competitive modes, the first player or team to correctly place 10 cards wins the game.
 
-Se mezclan categorías. En un mismo turno puede aparecer una canción, una película o un videojuego, lo que hace la partida más impredecible.
+In cooperative mode, all players work together to restore the timeline before running out of DeLorean tokens.
 
-### Modo Cooperativo
+---
 
-Todos los jugadores comparten una sola línea del tiempo y trabajan juntos para restaurar la historia antes de quedarse sin fichas DeLorean.
+## Game Modes
 
-## Web app
+### Original Mode
 
-La web app sirve como acompañante digital del juego físico.
+The classic way to play Back to the Hitz.
 
-Flujo principal:
+Players or teams build their own timelines by placing cards in chronological order. Each round uses the active category or deck, and players compete to be the first to correctly place 10 cards.
 
-1. `index.html` muestra la pantalla inicial y el botón para escanear.
-2. `script.js` inicializa el lector QR y procesa el contenido del código.
-3. Cuando el QR es válido, la app carga la pista con YouTube IFrame API.
-4. Tras la pista, se muestra la pantalla de tiempo terminado para que el jugador coloque la tarjeta.
-5. `rules.html` contiene las reglas del juego.
+### Chaos Mode
 
-Sitio principal previsto:
+All categories are mixed together.
+
+Players can jump from a song to a movie to a video game without warning. This mode is more unpredictable and is ideal for groups that want a harder and more chaotic experience.
+
+### Cooperative Mode
+
+All players work together as one team.
+
+The group shares a single timeline and must correctly place 10 cards before losing all available DeLorean tokens.
+
+---
+
+## DeLorean Tokens
+
+DeLorean tokens add risk, strategy, and interaction to the game.
+
+Players may use DeLorean tokens to:
+
+* Change a card if they do not want to play the current one.
+* Challenge another player's placement.
+* Gain strategic advantages depending on the selected game mode.
+* Trade tokens for special actions when allowed by the rules.
+
+Players can earn DeLorean tokens by correctly identifying extra information about a card, such as the artist, director, actor, developer, publisher, creator, or another relevant detail.
+
+---
+
+## Companion Web App
+
+Back to the Hitz uses a companion web app to scan QR-coded cards and display the clue experience.
+
+Main site:
 
 ```text
 https://www.backtothehitz.com
 ```
 
-## Formato de los QR
+The web app is designed to be used during gameplay with a phone, tablet, or computer that has camera access.
 
-La app espera parámetros en el texto del QR para identificar la categoría y el video.
+---
 
-Parámetros soportados:
+## Browser Compatibility
 
-| Parámetro | Categoría | Descripción |
-| --- | --- | --- |
-| `c` | Cine | ID de video de YouTube para una pista de película. |
-| `g` | Juego | ID de video de YouTube para una pista de videojuego. |
-| `mv` | Música video | ID de video de YouTube para una pista musical con video. |
-| `ma` | Música audio | ID de video de YouTube para una pista musical tratada como audio. |
-| `s` | Inicio | Segundo de inicio opcional para reproducir la pista. |
+For the best experience, use a modern browser such as:
 
-Ejemplos:
+* Google Chrome
+* Microsoft Edge
+* Firefox
+* Brave
+* Another Chromium-based browser
 
-```text
-c=dQw4w9WgXcQ
-```
+Camera permissions must be enabled in order to scan QR cards.
 
-```text
-ma=dQw4w9WgXcQ&s=42
-```
+Safari support may be limited depending on the device and browser version.
 
-El archivo `replacements.json` permite reemplazar IDs de video por otros y, opcionalmente, definir un nuevo tiempo de inicio.
+---
 
-## Estructura del repositorio
+## Suggested Physical Components
+
+A complete physical version of Back to the Hitz may include:
+
+* QR-coded cards
+* Category decks
+* DeLorean tokens
+* Rulebook
+* Timeline play area
+* Box or storage system
+* Optional player aids or reference cards
+
+---
+
+## Repository Purpose
+
+This repository stores the digital components of Back to the Hitz.
+
+It may include:
+
+* Companion web app source code
+* Game rules
+* QR card data
+* Card templates
+* Visual assets
+* Print-and-play resources
+* Development notes
+* Deployment files
+* Documentation
+
+---
+
+## Suggested Repository Structure
 
 ```text
 BackToTheHitz/
-├── index.html          # Pantalla principal y escáner
-├── rules.html          # Reglas del juego
-├── style.css           # Estilos de la app principal
-├── rules.css           # Estilos de la página de reglas
-├── script.js           # Lógica del escáner, YouTube y flujo de juego
-├── sw.js               # Service worker para cache offline básico
-├── manifest.json       # Manifest de PWA
-├── replacements.json   # Reemplazos de videos para tarjetas existentes
-├── netlify.toml        # Redirección SPA/static para Netlify
-├── robots.txt          # Directivas para bots
-├── icons/              # Íconos de la app
-└── *.mp3, *.gif, *.png # Recursos audiovisuales y gráficos
+├── public/
+│   ├── images/
+│   ├── cards/
+│   └── assets/
+├── src/
+│   ├── components/
+│   ├── data/
+│   ├── pages/
+│   └── utils/
+├── rules/
+│   └── rules.md
+├── templates/
+│   └── cards/
+├── README.md
+└── package.json
 ```
 
-## Desarrollo local
+The actual structure may vary depending on the final implementation of the web app.
 
-No hay dependencias de Node, bundler ni paso de compilación. Basta con servir los archivos estáticos desde un servidor local.
+---
 
-Con Python:
+## Development
+
+If this repository contains the companion web app, install dependencies with:
 
 ```bash
-python3 -m http.server 8000
+npm install
 ```
 
-Luego abre:
+Run the development server with:
 
-```text
-http://localhost:8000
+```bash
+npm run dev
 ```
 
-> Nota: el escaneo con cámara suele requerir un contexto seguro. En producción usa HTTPS. En desarrollo, muchos navegadores permiten cámara en `localhost`.
+Build the project for production with:
 
-Para omitir el registro del service worker durante pruebas, abre la app con:
-
-```text
-http://localhost:8000/?dev=true
+```bash
+npm run build
 ```
 
-## Despliegue
+Preview the production build with:
 
-El proyecto puede desplegarse como sitio estático.
+```bash
+npm run preview
+```
 
-Opciones recomendadas:
+---
 
-- Netlify
-- Vercel
-- Cloudflare Pages
-- GitHub Pages
-- Cualquier servidor web estático con HTTPS
+## Deployment
 
-La configuración incluida para Netlify redirige todas las rutas hacia `index.html`.
+The web app can be deployed to any modern static hosting or web hosting platform, depending on the framework used.
 
-## Compatibilidad
+Possible deployment targets include:
 
-Para la mejor experiencia se recomienda usar:
+* GitHub Pages
+* Netlify
+* Vercel
+* Cloudflare Pages
+* Self-hosted Docker environment
+* Traditional web server
 
-- Google Chrome
-- Microsoft Edge
-- Brave
-- Firefox
-- Otros navegadores modernos basados en Chromium
+---
 
-Requisitos importantes:
+## Design Goals
 
-- Permiso de cámara habilitado.
-- Conexión a internet para cargar YouTube y la librería del escáner QR desde CDN.
-- HTTPS en producción.
+Back to the Hitz is designed to be:
 
-Safari puede presentar limitaciones con cámara, reproducción automática o APIs utilizadas por la app.
+* Easy to learn
+* Fast to play
+* Fun for casual players
+* Challenging for pop culture fans
+* Flexible for different group sizes
+* Replayable through a large card pool
+* Playable with minimal setup
+* Enhanced by digital clues without losing the feel of a physical board game
 
-## Créditos
+---
 
-Creado por **Alfredo Olvera**.
+## Legal Notice
 
-Dedicado para Rebeca e inspirado por la nostalgia, la música, el cine, los videojuegos y el caos temporal.
+Back to the Hitz is a fan-made board game and pop culture trivia experience.
 
-## Aviso legal
+All referenced songs, movies, video games, characters, images, videos, names, trademarks, and related media belong to their respective rights holders.
 
-**Back to the Hitz** es un proyecto fan-made de juego de mesa y trivia cultural.
+This project is intended for personal, private, educational, and non-commercial use unless otherwise stated.
 
-Las canciones, películas, videojuegos, personajes, marcas, imágenes, videos, nombres y demás referencias pertenecen a sus respectivos titulares. Este repositorio no otorga derechos sobre contenido de terceros.
+Do not use this project to distribute copyrighted material without permission.
 
-El proyecto está pensado para uso personal, privado, educativo o no comercial salvo que se indique lo contrario. No distribuyas material protegido por derechos de autor sin autorización.
+---
 
-## Licencia
+## Credits
 
-No se ha seleccionado una licencia open source para este repositorio. Mientras no exista un archivo de licencia, todos los derechos quedan reservados.
+Created by **Alfredo Olvera**.
+
+Inspired by pop culture, nostalgia, music, cinema, video games, and time-travel chaos.
+
+---
+
+## License
+
+No open-source license has been selected yet.
+
+Unless a license is added to this repository, all rights are reserved.
+
+If the project is made public, consider using separate licenses for different parts of the project:
+
+* Code: MIT License or another open-source software license
+* Original game materials: Creative Commons or All Rights Reserved
+* Third-party media references: owned by their respective rights holders

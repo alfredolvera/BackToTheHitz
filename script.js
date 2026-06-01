@@ -60,8 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Variables de estado
     let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null;
-    const PREPARATION_DELAY_MS = 7000;
-    const GAME_DURATION_MS = 60000;
     let currentGameCategory = null;
     let replacements = {};
 
@@ -74,16 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
         screenElement.classList.add('active');
     }
 
-    function getOrCreatePlayerElement() {
-        let playerElement = document.getElementById('player');
-        if (!playerElement) {
-            playerElement = document.createElement('div');
-            playerElement.id = 'player';
-            playerContainer.insertBefore(playerElement, document.getElementById('click-blocker'));
-        }
-        return playerElement;
-    }
-
     function startScanning() {
         backgroundMusic.pause(); // Detener música de fondo
         if (gamePlayer) gamePlayer.destroy();
@@ -93,8 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         warpSpeedSound.currentTime = 0;
         gamePlayer = null; preparationTimer = null; gameTimer = null;
         currentGameCategory = null;
-        getOrCreatePlayerElement().classList.remove('ready');
-        playerContainer.classList.remove('needs-gesture', 'video-ready');
+        document.getElementById('player').classList.remove('ready');
         countdownMessage.classList.remove('visible');
         starfield.classList.remove('visible');
         waveBackground.classList.remove('visible');
@@ -111,25 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             qrbox: { width: qrboxSize, height: qrboxSize },
             aspectRatio: 1
         };
-        startQrScanner(config);
-    }
-
-    function startQrScanner(config) {
-        qrScanner.start({ facingMode: { ideal: "environment" } }, config, onScanSuccess)
-            .catch(() => startQrScannerWithFallbackCamera(config));
-    }
-
-    function startQrScannerWithFallbackCamera(config) {
-        Html5Qrcode.getCameras()
-            .then(cameras => {
-                if (!cameras || cameras.length === 0) throw new Error("No camera found");
-                const preferredCamera = cameras.find(camera => /back|rear|environment|trasera|posterior/i.test(camera.label)) || cameras[0];
-                return qrScanner.start(preferredCamera.id, config, onScanSuccess);
-            })
-            .catch(err => {
-                console.error("Camera access failed", err);
-                qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador o prueba con otra cámara.";
-            });
+        qrScanner.start({ facingMode: "environment" }, config, onScanSuccess).catch(err => qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador.");
     }
 
     function getScannerBoxSize() {
@@ -138,20 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.max(220, Math.min(comfortableSize, 360));
     }
 
-    function getQrParams(decodedText) {
-        try {
-            const url = new URL(decodedText);
-            return url.searchParams;
-        } catch (error) {
-            return new URLSearchParams(decodedText);
-        }
-    }
-
     function onScanSuccess(decodedText) {
         qrStatusElement.textContent = "QR detectado. Preparando viaje temporal...";
         qrScanner.stop().then(() => {
             try {
-                const params = getQrParams(decodedText);
+                const params = new URLSearchParams(decodedText);
                 let videoId = null, detectedCategory = null;
                 let startTime = params.get('s');
                 if (params.has('c')) { detectedCategory = 'cine'; videoId = params.get('c'); } 
@@ -193,73 +153,38 @@ document.addEventListener('DOMContentLoaded', () => {
     function createPlayer(videoId, videoCategory, startTime) {
         if (gamePlayer) gamePlayer.destroy();
         gamePlayer = null;
-        getOrCreatePlayerElement();
         currentGameCategory = videoCategory;
         countdownMessage.classList.add('visible');
         starfield.classList.add('visible');
         warpSpeedSound.play();
-        const playerVars = { 'autoplay': 1, 'mute': 0, 'controls': 1, 'rel': 0, 'playsinline': 1 };
+        const playerVars = { 'autoplay': 1, 'mute': 0, 'controls': 1, 'rel': 0 };
         if (startTime) playerVars.start = parseInt(startTime, 10);
-        gamePlayer = new YT.Player('player', {
-            width: '100%',
-            height: '100%',
-            videoId: videoId,
-            playerVars: playerVars,
-            events: {
-                'onReady': onPlayerReady,
-                'onStateChange': onPlayerStateChange,
-                'onAutoplayBlocked': onAutoplayBlocked
-            }
-        });
+        gamePlayer = new YT.Player('player', { videoId: videoId, playerVars: playerVars, events: { 'onStateChange': onPlayerStateChange } });
     }
     
     window.myAppScope.createPlayer = createPlayer;
 
-    function onPlayerReady(event) {
-        event.target.playVideo();
-    }
-
     function onPlayerStateChange(event) {
-        if (event.data === YT.PlayerState.PLAYING) {
-            playerContainer.classList.remove('needs-gesture');
-            startPreparationCountdown();
+        if (event.data === YT.PlayerState.PLAYING && preparationTimer === null) {
+            preparationTimer = setTimeout(() => {
+                const playerElement = document.getElementById('player');
+                countdownMessage.classList.remove('visible');
+                starfield.classList.remove('visible');
+                if (currentGameCategory === 'musica_audio') {
+                    waveBackground.classList.add('visible');
+                    musicVisualizerContainer.classList.add('visible');
+                    vinylRecord.classList.add('spinning');
+                } else {
+                    if (playerElement) playerElement.classList.add('ready');
+                }
+                gameTimer = setTimeout(endGame, 60000);
+            }, 7000);
         }
-    }
-
-    function onAutoplayBlocked() {
-        playerContainer.classList.add('needs-gesture');
-        if (preparationTimer !== null) {
-            clearTimeout(preparationTimer);
-            preparationTimer = null;
-        }
-        revealCurrentClue();
-    }
-
-    function startPreparationCountdown() {
-        if (preparationTimer !== null) return;
-        preparationTimer = setTimeout(revealCurrentClue, PREPARATION_DELAY_MS);
-    }
-
-    function revealCurrentClue() {
-        const playerElement = document.getElementById('player');
-        countdownMessage.classList.remove('visible');
-        starfield.classList.remove('visible');
-        if (currentGameCategory === 'musica_audio') {
-            playerContainer.classList.remove('video-ready');
-            waveBackground.classList.add('visible');
-            musicVisualizerContainer.classList.add('visible');
-            vinylRecord.classList.add('spinning');
-        } else {
-            playerContainer.classList.add('video-ready');
-            if (playerElement) playerElement.classList.add('ready');
-        }
-        if (gameTimer === null) gameTimer = setTimeout(endGame, GAME_DURATION_MS);
     }
     
     function endGame(){
         const playerElement = document.getElementById('player');
         if (playerElement) playerElement.classList.remove('ready');
-        playerContainer.classList.remove('video-ready');
         warpSpeedSound.pause();
         warpSpeedSound.currentTime = 0;
         waveBackground.classList.remove('visible');
