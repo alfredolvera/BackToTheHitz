@@ -4,25 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reglas del Juego - Back to the Hitz</title>
-    
-    <!-- NUEVO: Favicon -->
-    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
-	
-    <!-- NUEVO: Instrucción para no indexar -->
+
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <meta name="robots" content="noindex, nofollow">
-    
+
     <link rel="stylesheet" href="rules.css">
 </head>
 <body>
-    <!-- El contenido del body no cambia -->
+    <nav class="rules-topbar" aria-label="Navegación de reglas">
+        <span class="rules-brand">Back to the Hitz</span>
+        <a href="index.html" class="topbar-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <span>Volver al escáner</span>
+        </a>
+    </nav>
     <main id="rules-container">
-        <h1>Reglas del Juego</h1>
-        <section>
+        <header class="rules-hero">
+            <span class="rules-kicker">Manual temporal</span>
+            <h1>Reglas del Juego</h1>
+            <p class="rules-intro">Aprende a restaurar la línea del tiempo colocando cada hit cultural en su año correcto.</p>
+        </header>
+        <div class="rules-grid">
+        <section class="rule-card featured" data-icon="⚡">
             <h2>Historia</h2>
             <p>¡Biff Tannen ha vuelto a las andadas! Robó la máquina del tiempo y ha alterado el pasado. Por suerte, lograste recuperar el DeLorean, pero ahora debes saltar entre distintas épocas y restaurar el orden original de la música, películas y videojuegos que encuentres en el camino.</p>
             <p>Tu misión es escanear, ver y escuchar más de 900 tarjetas con películas, canciones y videojuegos, y tratar de deducir en qué año se publicaron. No necesitas acertar el año exacto, solo si ocurrieron <strong>antes, después o entre</strong> las obras que ya están en tu línea del tiempo. Si además sabes el nombre de la obra, su autor o algún detalle extra, tus posibilidades de ganar aumentan.</p>
         </section>
-        <section>
+        <section class="rule-card" data-icon="🧭">
             <h2>Modo de Juego</h2>
             <p>Elige cómo quieres jugar:</p>
             <ul>
@@ -30,9 +38,14 @@
                 <li><strong>Caos:</strong> Las categorías se mezclan. Tendrás que saltar entre películas, música y videojuegos sin previo aviso.</li>
                 <li><strong>Cooperativo:</strong> Todos juegan juntos para restaurar la línea del tiempo.</li>
             </ul>
+            <div class="mode-summary" aria-label="Resumen de modos de juego">
+                <div class="mode-pill"><strong>Original</strong><span>Compite por crear tu línea del tiempo perfecta.</span></div>
+                <div class="mode-pill"><strong>Caos</strong><span>Mezcla canciones, películas y videojuegos.</span></div>
+                <div class="mode-pill"><strong>Cooperativo</strong><span>Todos restauran la historia como un equipo.</span></div>
+            </div>
             <p class="note">Nota: El año indicado en cada tarjeta corresponde al año original en el que la obra fue publicada o estuvo disponible al público.</p>
         </section>
-        <section>
+        <section class="rule-card featured" data-icon="🎮">
             <h2>Modo Original</h2>
             <h3>Preparativos</h3>
             <ul>
@@ -47,7 +60,7 @@
                 <li><strong>¡Ganador!</strong><p>El primero en tener <strong>10 tarjetas colocadas correctamente</strong> en su línea del tiempo gana el juego y restaura la historia tal como la conocíamos.</p></li>
             </ol>
         </section>
-        <section>
+        <section class="rule-card featured" data-icon="🚗">
             <h2>Fichas DeLorean</h2>
             <p>Estas fichas añaden emoción al juego. Puedes usarlas de tres formas:</p>
             <ol>
@@ -68,12 +81,12 @@
                 <li><strong>En cualquier momento</strong><p>Puedes intercambiar <strong>3 fichas DeLorean</strong> por la tarjeta superior de la pila actual y colocarla directamente en tu línea del tiempo sin adivinar.</p></li>
             </ol>
         </section>
-        <section>
+        <section class="rule-card" data-icon="✨">
             <h2>¿Cómo Ganar Fichas DeLorean?</h2>
             <p>En tu turno, puedes ganar <strong>1 ficha DeLorean</strong> si aciertas el nombre de la obra y al menos uno de los siguientes datos: artista, director, actor, creador, etc. Esto aplica aunque no coloques correctamente la tarjeta.</p>
             <p class="note">Ningún jugador puede tener más de 5 fichas DeLorean a la vez.</p>
         </section>
-        <section>
+        <section class="rule-card" data-icon="🤝">
             <h2>Modo Cooperativo</h2>
             <p>¿Prefieres colaborar en lugar de competir? Entonces este es tu modo. Jueguen como equipo siguiendo las reglas del modo Original, con las siguientes diferencias:</p>
              <ul>
@@ -89,6 +102,7 @@
             </ul>
              <p class="note"><strong>CONSEJO:</strong> Para aumentar la dificultad, reduzcan la cantidad de fichas iniciales o incrementen el número de tarjetas necesarias para ganar.</p>
         </section>
+        </div>
         <div class="final-message">
             <p>¿Listos para restaurar la línea del tiempo? ¡Activen el condensador de flujo y a jugar <strong>Back to the Hitz</strong>!</p>
         </div>
