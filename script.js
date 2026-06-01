@@ -64,6 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let replacements = {};
     let lastCameraId = null;
     let isScannerRunning = false;
+    let scannerStream = null;
+    let scannerVideo = null;
+    let scannerCanvas = null;
+    let scannerContext = null;
+    let scannerFrameId = null;
+    let lastQrDecodeTime = 0;
+    let isHandlingScan = false;
+    const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
 
     fetch('replacements.json').then(response => response.json()).then(data => { replacements = data; console.log("Replacements loaded."); }).catch(console.error);
 
@@ -83,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         warpSpeedSound.currentTime = 0;
         gamePlayer = null; preparationTimer = null; gameTimer = null;
         currentGameCategory = null;
+        isHandlingScan = false;
         document.getElementById('player').classList.remove('ready');
         countdownMessage.classList.remove('visible');
         starfield.classList.remove('visible');
@@ -92,26 +101,36 @@ document.addEventListener('DOMContentLoaded', () => {
         scanAgainButton.classList.remove('visible');
         showScreen(scannerScreen);
         qrStatusElement.textContent = "Buscando una tarjeta en la línea del tiempo...";
-        if (!qrScanner) qrScanner = new Html5Qrcode("qr-reader");
-        if (isScannerRunning) await stopScanner();
+        await stopScanner();
         const qrboxSize = getScannerBoxSize();
         document.getElementById('qr-reader').style.setProperty('--scan-box-size', `${qrboxSize}px`);
+
+        try {
+            if (isFirefox && window.jsQR) {
+                await startFirefoxQrScanner();
+            } else {
+                await startHtml5QrScanner(qrboxSize);
+            }
+            isScannerRunning = true;
+        } catch (err) {
+            console.warn("No se pudo iniciar el escáner principal; probando escáner compatible.", err);
+            await stopScanner();
+            try {
+                await startFirefoxQrScanner();
+                isScannerRunning = true;
+            } catch (fallbackErr) {
+                console.error("No se pudo iniciar el escáner QR", fallbackErr);
+                qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador o prueba con otra cámara.";
+            }
+        }
+    }
+
+    async function startHtml5QrScanner(qrboxSize) {
+        if (!qrScanner) qrScanner = new Html5Qrcode("qr-reader");
         const config = {
             fps: 10,
             qrbox: { width: qrboxSize, height: qrboxSize }
         };
-
-        try {
-            await startScannerWithBestCamera(config);
-            isScannerRunning = true;
-        } catch (err) {
-            console.error("No se pudo iniciar el escáner QR", err);
-            qrStatusElement.textContent = "Error: No se pudo acceder a la cámara. Revisa los permisos del navegador o prueba con otra cámara.";
-        }
-    }
-
-
-    async function startScannerWithBestCamera(config) {
         const cameraId = await getPreferredCameraId();
         if (cameraId) {
             try {
@@ -124,6 +143,119 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         await qrScanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
+    }
+
+    async function startFirefoxQrScanner() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("Este navegador no expone getUserMedia.");
+        }
+        if (!window.jsQR) {
+            throw new Error("No se cargó el lector QR compatible con Firefox.");
+        }
+
+        const qrReader = document.getElementById('qr-reader');
+        qrReader.innerHTML = '';
+        qrReader.classList.remove('firefox-rotate-preview');
+        scannerVideo = document.createElement('video');
+        scannerVideo.setAttribute('playsinline', 'true');
+        scannerVideo.muted = true;
+        scannerVideo.autoplay = true;
+        qrReader.appendChild(scannerVideo);
+
+        scannerCanvas = document.createElement('canvas');
+        scannerCanvas.hidden = true;
+        scannerContext = scannerCanvas.getContext('2d', { willReadFrequently: true });
+
+        scannerStream = await getCameraStream();
+        scannerVideo.srcObject = scannerStream;
+        scannerVideo.addEventListener('loadedmetadata', updateFirefoxPreviewOrientation);
+        window.addEventListener('resize', updateFirefoxPreviewOrientation);
+        await scannerVideo.play();
+        updateFirefoxPreviewOrientation();
+        scanFirefoxFrame();
+    }
+
+    function updateFirefoxPreviewOrientation() {
+        if (!scannerVideo) return;
+
+        const qrReader = document.getElementById('qr-reader');
+        const isPortraitViewport = window.innerHeight > window.innerWidth;
+        const isLandscapeFrame = scannerVideo.videoWidth > scannerVideo.videoHeight;
+        qrReader.classList.toggle('firefox-rotate-preview', isPortraitViewport && isLandscapeFrame);
+    }
+
+    async function getCameraStream() {
+        const cameraId = await getPreferredCameraId();
+        const constraintAttempts = [];
+        if (cameraId) {
+            constraintAttempts.push({ video: { deviceId: { exact: cameraId } } });
+        }
+        constraintAttempts.push({ video: { facingMode: { ideal: 'environment' } } });
+        constraintAttempts.push({ video: true });
+
+        let lastError = null;
+        for (const constraints of constraintAttempts) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const videoTrack = stream.getVideoTracks()[0];
+                if (videoTrack && videoTrack.getSettings().deviceId) {
+                    lastCameraId = videoTrack.getSettings().deviceId;
+                }
+                return stream;
+            } catch (err) {
+                lastError = err;
+            }
+        }
+        throw lastError || new Error("No se encontró una cámara disponible.");
+    }
+
+    function scanFirefoxFrame() {
+        if (!scannerVideo || !scannerContext || isHandlingScan) return;
+
+        const now = performance.now();
+        if (now - lastQrDecodeTime >= 120 && scannerVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && scannerVideo.videoWidth && scannerVideo.videoHeight) {
+            lastQrDecodeTime = now;
+            const decodedText = decodeVideoFrame(scannerVideo.videoWidth, scannerVideo.videoHeight);
+            if (decodedText) {
+                onScanSuccess(decodedText);
+                return;
+            }
+        }
+
+        scannerFrameId = requestAnimationFrame(scanFirefoxFrame);
+    }
+
+    function decodeVideoFrame(videoWidth, videoHeight) {
+        const rotations = [0, 90, 180, 270];
+        for (const rotation of rotations) {
+            const result = decodeVideoFrameRotation(videoWidth, videoHeight, rotation);
+            if (result) return result;
+        }
+        return null;
+    }
+
+    function decodeVideoFrameRotation(videoWidth, videoHeight, rotation) {
+        const rotated = rotation === 90 || rotation === 270;
+        scannerCanvas.width = rotated ? videoHeight : videoWidth;
+        scannerCanvas.height = rotated ? videoWidth : videoHeight;
+        scannerContext.save();
+        scannerContext.clearRect(0, 0, scannerCanvas.width, scannerCanvas.height);
+        if (rotation === 90) {
+            scannerContext.translate(scannerCanvas.width, 0);
+            scannerContext.rotate(Math.PI / 2);
+        } else if (rotation === 180) {
+            scannerContext.translate(scannerCanvas.width, scannerCanvas.height);
+            scannerContext.rotate(Math.PI);
+        } else if (rotation === 270) {
+            scannerContext.translate(0, scannerCanvas.height);
+            scannerContext.rotate(-Math.PI / 2);
+        }
+        scannerContext.drawImage(scannerVideo, 0, 0, videoWidth, videoHeight);
+        scannerContext.restore();
+
+        const imageData = scannerContext.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        return code ? code.data : null;
     }
 
     async function getPreferredCameraId() {
@@ -146,15 +278,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function stopScanner() {
-        if (!qrScanner || !isScannerRunning) return;
-
-        try {
-            await qrScanner.stop();
-        } catch (err) {
-            console.warn("No se pudo detener el escáner QR", err);
-        } finally {
-            isScannerRunning = false;
+        if (scannerFrameId) {
+            cancelAnimationFrame(scannerFrameId);
+            scannerFrameId = null;
         }
+        if (scannerStream) {
+            scannerStream.getTracks().forEach(track => track.stop());
+            scannerStream = null;
+        }
+        if (scannerVideo) {
+            scannerVideo.removeEventListener('loadedmetadata', updateFirefoxPreviewOrientation);
+            window.removeEventListener('resize', updateFirefoxPreviewOrientation);
+            document.getElementById('qr-reader').classList.remove('firefox-rotate-preview');
+            scannerVideo.srcObject = null;
+            scannerVideo.remove();
+            scannerVideo = null;
+        }
+        scannerCanvas = null;
+        scannerContext = null;
+        lastQrDecodeTime = 0;
+
+        if (qrScanner && isScannerRunning) {
+            try {
+                await qrScanner.stop();
+            } catch (err) {
+                console.warn("No se pudo detener el escáner QR", err);
+            }
+        }
+        isScannerRunning = false;
     }
 
     function onScanFailure() {
@@ -169,10 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function onScanSuccess(decodedText) {
+        if (isHandlingScan) return;
+        isHandlingScan = true;
         qrStatusElement.textContent = "QR detectado. Preparando viaje temporal...";
         await stopScanner();
         try {
-            const params = new URLSearchParams(decodedText);
+            const params = getQrParams(decodedText);
             let videoId = null, detectedCategory = null;
             let startTime = params.get('s');
             if (params.has('c')) { detectedCategory = 'cine'; videoId = params.get('c'); }
@@ -188,8 +341,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 playVideo(videoId, detectedCategory, startTime);
             } else { throw new Error("Formato QR no reconocido."); }
         } catch (error) {
+            isHandlingScan = false;
             qrStatusElement.textContent = "Código QR no válido. Inténtalo de nuevo.";
             setTimeout(() => startScanning(), 2000);
+        }
+    }
+
+    function getQrParams(decodedText) {
+        const trimmedText = decodedText.trim();
+        try {
+            return new URL(trimmedText, window.location.href).searchParams;
+        } catch (error) {
+            const queryString = trimmedText.startsWith('?') ? trimmedText.slice(1) : trimmedText;
+            return new URLSearchParams(queryString);
         }
     }
 

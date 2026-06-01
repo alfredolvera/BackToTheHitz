@@ -314,6 +314,10 @@ a:focus-visible {
     object-fit: cover;
 }
 
+#qr-reader.firefox-rotate-preview video {
+    transform: rotate(90deg);
+}
+
 #qr-reader::before {
     content: '';
     position: absolute;
