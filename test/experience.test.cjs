@@ -48,10 +48,12 @@ function loadApp() {
             this.options = options;
             this.volume = 80;
             this.paused = false;
+            this.captionOptions = [];
             players.push(this);
         }
         getVolume() { return this.volume; }
         setVolume(value) { this.volume = value; }
+        setOption(module, option, value) { this.captionOptions.push({ module, option, value }); }
         pauseVideo() { this.paused = true; }
         playVideo() {}
         destroy() {}
@@ -79,45 +81,61 @@ function loadApp() {
     return { window, element, players, timers, intervals, scans };
 }
 
-test('YouTube players request captions off by default', () => {
+test('YouTube players request captions off on load and when caption options become available', () => {
     const app = loadApp();
     app.window.myAppScope.createPlayer('video-id', 'cine', null);
     assert.equal(app.players.length, 2);
     for (const player of app.players) {
         assert.equal(player.options.playerVars.cc_load_policy, 0);
+        player.options.events.onReady({ target: player });
+        player.options.events.onApiChange({ target: player });
+        assert.equal(player.captionOptions.length, 2);
+        assert.equal(player.captionOptions[0].module, 'captions');
+        assert.equal(player.captionOptions[0].option, 'track');
+        assert.equal(Object.keys(player.captionOptions[0].value).length, 0);
     }
 });
 
-test('the guessing screen fades video audio and then pauses playback', () => {
+test('the 60-second experience shows the clue for 53 seconds and fades audio during its last 3 seconds', () => {
     const app = loadApp();
     app.window.myAppScope.createPlayer('video-id', 'cine', null);
     const player = app.players[1];
-    player.options.events.onStateChange({ data: 1 });
+    player.options.events.onStateChange({ data: 1, target: player });
     const preparation = [...app.timers.values()].find(timer => timer.delay === 7000);
     preparation.callback();
-    const game = [...app.timers.values()].find(timer => timer.delay === 60000);
-    game.callback();
-
-    assert.equal(app.element('times-up-screen').classList.contains('active'), true);
+    const fade = [...app.timers.values()].find(timer => timer.delay === 50000);
+    const game = [...app.timers.values()].find(timer => timer.delay === 53000);
+    assert.ok(fade);
+    assert.ok(game);
+    assert.equal(app.element('times-up-screen').classList.contains('active'), false);
+    fade.callback();
     assert.equal(player.volume, 80);
     assert.equal(player.paused, false);
-    assert.ok(app.intervals.size >= 1);
-    for (let step = 0; step < 40 && !player.paused; step++) {
-        for (const interval of [...app.intervals.values()]) interval.callback();
+    const volumeInterval = [...app.intervals.values()].find(interval => interval.delay === 75);
+    assert.ok(volumeInterval);
+    for (let step = 0; step < 39; step++) {
+        volumeInterval.callback();
     }
+    assert.ok(player.volume > 0);
+    assert.equal(player.paused, false);
+    volumeInterval.callback();
+    game.callback();
+    assert.equal(app.element('times-up-screen').classList.contains('active'), true);
     assert.equal(player.volume, 0);
     assert.equal(player.paused, true);
 });
 
-test('the temporal year display settles on an unknown year when guessing begins', () => {
+test('the temporal year display keeps shuffling for 5 seconds', () => {
     const app = loadApp();
     app.window.myAppScope.createPlayer('video-id', 'cine', null);
-    app.players[1].options.events.onStateChange({ data: 1 });
+    app.players[1].options.events.onStateChange({ data: 1, target: app.players[1] });
     [...app.timers.values()].find(timer => timer.delay === 7000).callback();
-    [...app.timers.values()].find(timer => timer.delay === 60000).callback();
-    for (let step = 0; step < 50 && app.element('temporal-year').textContent !== '????'; step++) {
-        for (const interval of [...app.intervals.values()]) interval.callback();
-    }
+    [...app.timers.values()].find(timer => timer.delay === 53000).callback();
+    const yearInterval = [...app.intervals.values()].find(interval => interval.delay === 100);
+    assert.ok(yearInterval);
+    for (let step = 0; step < 49; step++) yearInterval.callback();
+    assert.notEqual(app.element('temporal-year').textContent, '????');
+    yearInterval.callback();
     assert.equal(app.element('temporal-year').textContent, '????');
 });
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'back-to-the-hitz-v26';
+const CACHE_NAME = 'back-to-the-hitz-v27';
 
 const URLS_TO_CACHE = [
   '/',

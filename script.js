@@ -5,7 +5,16 @@ window.onYouTubeIframeAPIReady = function() {
     new YT.Player('background-player', {
         videoId: 'hsOOCgmjR0k',
         playerVars: { 'autoplay': 1, 'controls': 0, 'loop': 1, 'playlist': 'hsOOCgmjR0k', 'mute': 1, 'cc_load_policy': 0, 'playsinline': 1 },
-        events: { 'onReady': (event) => event.target.playVideo() }
+        events: {
+            'onReady': (event) => {
+                requestCaptionsOff(event);
+                event.target.playVideo();
+            },
+            'onApiChange': requestCaptionsOff,
+            'onStateChange': (event) => {
+                if (event.data === YT.PlayerState.PLAYING) requestCaptionsOff(event);
+            }
+        }
     });
     const appScope = window.myAppScope;
     if (appScope) {
@@ -16,6 +25,14 @@ window.onYouTubeIframeAPIReady = function() {
         }
     }
 };
+
+function requestCaptionsOff(event) {
+    try {
+        event.target.setOption('captions', 'track', {});
+    } catch (error) {
+        console.warn('YouTube no permitió desactivar los subtítulos.', error);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias a los elementos del DOM
@@ -60,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Variables de estado
-    let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null;
+    let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null, fadeStartTimer = null;
     let volumeFadeTimer = null, yearShuffleTimer = null;
     let currentGameCategory = null;
     let replacements = {};
@@ -88,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         backgroundMusic.pause(); // Detener música de fondo
         if (volumeFadeTimer) clearInterval(volumeFadeTimer);
         if (yearShuffleTimer) clearInterval(yearShuffleTimer);
+        if (fadeStartTimer) clearTimeout(fadeStartTimer);
         volumeFadeTimer = null;
         yearShuffleTimer = null;
         if (gamePlayer) gamePlayer.destroy();
@@ -95,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameTimer) clearTimeout(gameTimer);
         warpSpeedSound.pause();
         warpSpeedSound.currentTime = 0;
-        gamePlayer = null; preparationTimer = null; gameTimer = null;
+        gamePlayer = null; preparationTimer = null; gameTimer = null; fadeStartTimer = null;
         currentGameCategory = null;
         isHandlingScan = false;
         document.getElementById('player').classList.remove('ready');
@@ -391,12 +409,17 @@ document.addEventListener('DOMContentLoaded', () => {
         warpSpeedSound.play();
         const playerVars = { 'autoplay': 1, 'mute': 0, 'controls': 1, 'rel': 0, 'cc_load_policy': 0 };
         if (startTime) playerVars.start = parseInt(startTime, 10);
-        gamePlayer = new YT.Player('player', { videoId: videoId, playerVars: playerVars, events: { 'onStateChange': onPlayerStateChange } });
+        gamePlayer = new YT.Player('player', {
+            videoId: videoId,
+            playerVars: playerVars,
+            events: { 'onReady': requestCaptionsOff, 'onApiChange': requestCaptionsOff, 'onStateChange': onPlayerStateChange }
+        });
     }
 
     window.myAppScope.createPlayer = createPlayer;
 
     function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.PLAYING) requestCaptionsOff(event);
         if (event.data === YT.PlayerState.PLAYING && preparationTimer === null) {
             preparationTimer = setTimeout(() => {
                 const playerElement = document.getElementById('player');
@@ -409,12 +432,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     if (playerElement) playerElement.classList.add('ready');
                 }
-                gameTimer = setTimeout(endGame, 60000);
+                fadeStartTimer = setTimeout(fadeOutGamePlayer, 50000);
+                gameTimer = setTimeout(endGame, 53000);
             }, 7000);
         }
     }
 
     function endGame(){
+        if (fadeStartTimer) clearTimeout(fadeStartTimer);
+        if (volumeFadeTimer) clearInterval(volumeFadeTimer);
+        fadeStartTimer = null;
+        volumeFadeTimer = null;
+        if (gamePlayer) {
+            gamePlayer.setVolume(0);
+            gamePlayer.pauseVideo();
+        }
         const playerElement = document.getElementById('player');
         if (playerElement) playerElement.classList.remove('ready');
         warpSpeedSound.pause();
@@ -434,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         temporalYear.textContent = String(years[0]);
         yearShuffleTimer = setInterval(() => {
             frame += 1;
-            if (frame >= 20) {
+            if (frame >= 50) {
                 temporalYear.textContent = '????';
                 timesUpScreen.classList.add('year-revealed');
                 clearInterval(yearShuffleTimer);
@@ -442,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 temporalYear.textContent = String(years[frame % years.length]);
             }
-        }, 90);
+        }, 100);
     }
 
     function fadeOutGamePlayer() {
@@ -452,8 +484,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let step = 0;
         volumeFadeTimer = setInterval(() => {
             step += 1;
-            player.setVolume(Math.max(0, Math.round(startVolume * (1 - step / 20))));
-            if (step >= 20) {
+            player.setVolume(Math.max(0, Math.round(startVolume * (1 - step / 40))));
+            if (step >= 40) {
                 clearInterval(volumeFadeTimer);
                 volumeFadeTimer = null;
                 player.pauseVideo();
