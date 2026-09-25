@@ -1,8 +1,10 @@
-const CACHE_NAME = 'back-to-the-hitz-v29';
+const CACHE_NAME = 'back-to-the-hitz-v30';
 
 const URLS_TO_CACHE = [
   '/',
   'index.html',
+  'guest.html',
+  'guest.js',
   'rules.html',
   'style.css',
   'rules.css',
@@ -32,6 +34,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET' || new URL(event.request.url).pathname.startsWith('/.netlify/functions/')) return;
   event.respondWith(
     caches.match(event.request)
       .then(response => response || fetch(event.request))

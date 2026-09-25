@@ -109,6 +109,12 @@ https://www.backtothehitz.com
 
 The web app is designed to be used during gameplay with a phone, tablet, or computer that has camera access.
 
+### Single-device and multi-device play
+
+In single-device mode, the same device scans each card and plays its clue. In multi-device mode, open the home page on the TV or speaker-connected device and choose **Crear sala multidevice**. Share the displayed QR, link, or seven-character room code. Players open the link on their phones, scan cards, and send them to the host. Only the host plays video and sound. Scans received during a round wait in a queue until the host chooses **Escanear otra**. The host can return home to close the room. Rooms expire after four hours.
+
+The room API is a Netlify Function backed by site-scoped Netlify Blobs. The host token remains in its browser session and is never included in the invitation. Phone scanners only receive the room code.
+
 ---
 
 ## Browser Compatibility
@@ -186,29 +192,20 @@ The actual structure may vary depending on the final implementation of the web a
 
 ## Development
 
-If this repository contains the companion web app, install dependencies with:
+Install the Function dependency and run the automated checks with:
 
 ```bash
-npm install
+npm ci
+npm test
 ```
 
-Run the development server with:
+For local Netlify Functions and Blobs, run:
 
 ```bash
-npm run dev
+netlify dev
 ```
 
-Build the project for production with:
-
-```bash
-npm run build
-```
-
-Preview the production build with:
-
-```bash
-npm run preview
-```
+The web assets are static files in the repository root; there is no build step.
 
 ---
 

@@ -46,6 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const timesUpScreen = document.getElementById('times-up-screen');
     const countdownMessage = document.getElementById('countdown-message');
     const startScanButton = document.getElementById('start-scan-button');
+    const createRoomButton = document.getElementById('create-room-button');
+    const hostScreen = document.getElementById('host-screen');
+    const hostHomeButton = document.getElementById('host-home-button');
+    const homeButton = document.getElementById('home-button');
+    const hostPlayButton = document.getElementById('host-play-button');
     const scanAgainButton = document.getElementById('scan-again-button');
     const qrStatusElement = document.getElementById('qr-reader-status');
     const starfield = document.getElementById('starfield');
@@ -91,6 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let scannerFrameId = null;
     let lastQrDecodeTime = 0;
     let isHandlingScan = false;
+    let room = null;
+    let roomPollTimer = null;
+    let roomPolling = false;
+    let roomBusy = false;
+    const roomQueue = [];
+    const queuedIds = new Set();
     const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
 
     fetch('replacements.json').then(response => response.json()).then(data => { replacements = data; console.log("Replacements loaded."); }).catch(console.error);
@@ -100,23 +111,117 @@ document.addEventListener('DOMContentLoaded', () => {
     function showScreen(screenElement) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         screenElement.classList.add('active');
+        homeButton.classList.toggle('visible', screenElement === timesUpScreen);
     }
 
-    async function startScanning() {
-        backgroundMusic.pause(); // Detener música de fondo
+    async function roomRequest(action, method = 'GET', body) {
+        const url = `/.netlify/functions/room?action=${action}${room ? `&code=${room.code}` : ''}`;
+        const response = await fetch(url, {
+            method,
+            headers: { ...(room ? { Authorization: `Bearer ${room.hostToken}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
+            ...(body ? { body: JSON.stringify(body) } : {})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudo conectar con la sala.');
+        return data;
+    }
+
+    function showRoom() {
+        showScreen(hostScreen);
+        scanAgainButton.classList.remove('visible');
+        hostPlayButton.classList.remove('visible');
+        document.getElementById('room-details').hidden = false;
+        document.getElementById('room-code').textContent = room.code;
+        const inviteUrl = new URL('guest.html', window.location.href);
+        inviteUrl.search = `?room=${room.code}`;
+        const link = document.getElementById('room-link');
+        link.href = inviteUrl.href;
+        link.textContent = inviteUrl.href;
+        const qrTarget = document.getElementById('room-qr');
+        qrTarget.innerHTML = '';
+        if (window.qrcode) {
+            const qr = window.qrcode(0, 'M');
+            qr.addData(inviteUrl.href);
+            qr.make();
+            qrTarget.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 3, scalable: true });
+        }
+        updateRoomStatus();
+    }
+
+    function updateRoomStatus() {
+        if (!room) return;
+        const count = roomQueue.length;
+        document.getElementById('room-status').textContent = count
+            ? `${count} tarjeta${count === 1 ? '' : 's'} en espera. La siguiente comienza al terminar la ronda.`
+            : 'Esperando tarjetas de los celulares...';
+    }
+
+    async function createRoom() {
+        createRoomButton.disabled = true;
+        document.getElementById('room-error').textContent = '';
+        try {
+            room = await roomRequest('create', 'POST');
+            sessionStorage.setItem('bth-room', JSON.stringify(room));
+            backgroundMusic.pause();
+            showRoom();
+            await pollRoom();
+            roomPollTimer = setInterval(pollRoom, 2000);
+        } catch (error) {
+            document.getElementById('room-error').textContent = error.message;
+            showScreen(hostScreen);
+        } finally {
+            createRoomButton.disabled = false;
+        }
+    }
+
+    async function pollRoom() {
+        if (!room || roomPolling) return;
+        roomPolling = true;
+        try {
+            const { events } = await roomRequest('poll');
+            for (const event of events) {
+                if (!queuedIds.has(event.id)) {
+                    queuedIds.add(event.id);
+                    roomQueue.push(event);
+                }
+            }
+            updateRoomStatus();
+            playNextRoomCard();
+        } catch (error) {
+            document.getElementById('room-status').textContent = error.message;
+        } finally {
+            roomPolling = false;
+        }
+    }
+
+    async function playNextRoomCard() {
+        if (!room || roomBusy || !roomQueue.length) return;
+        roomBusy = true;
+        const event = roomQueue.shift();
+        updateRoomStatus();
+        try { await roomRequest('ack', 'POST', { id: event.id }); }
+        catch (error) { console.warn('No se pudo confirmar el escaneo', error); }
+        let videoId = event.videoId;
+        let startTime = event.startTime;
+        if (replacements[videoId]) {
+            videoId = replacements[videoId].videoId;
+            startTime = replacements[event.videoId].startTime || null;
+        }
+        playVideo(videoId, event.category, startTime);
+    }
+
+    function clearExperience() {
         if (volumeFadeTimer) clearInterval(volumeFadeTimer);
         if (yearShuffleTimer) clearInterval(yearShuffleTimer);
         if (fadeStartTimer) clearTimeout(fadeStartTimer);
-        volumeFadeTimer = null;
-        yearShuffleTimer = null;
-        if (gamePlayer) gamePlayer.destroy();
         if (preparationTimer) clearTimeout(preparationTimer);
         if (gameTimer) clearTimeout(gameTimer);
+        volumeFadeTimer = yearShuffleTimer = fadeStartTimer = preparationTimer = gameTimer = null;
+        if (gamePlayer) gamePlayer.destroy();
+        gamePlayer = null;
+        window.myAppScope.pendingVideo = undefined;
         warpSpeedSound.pause();
         warpSpeedSound.currentTime = 0;
-        gamePlayer = null; preparationTimer = null; gameTimer = null; fadeStartTimer = null;
-        currentGameCategory = null;
-        isHandlingScan = false;
         document.getElementById('player').classList.remove('ready');
         countdownMessage.classList.remove('visible');
         starfield.classList.remove('visible');
@@ -126,6 +231,38 @@ document.addEventListener('DOMContentLoaded', () => {
         scanAgainButton.classList.remove('visible');
         temporalYear.textContent = '1985';
         timesUpScreen.classList.remove('year-revealed');
+    }
+
+    function returnToRoom() {
+        clearExperience();
+        roomBusy = false;
+        showRoom();
+        playNextRoomCard();
+    }
+
+    async function returnHome() {
+        clearExperience();
+        await stopScanner();
+        if (roomPollTimer) clearInterval(roomPollTimer);
+        roomPollTimer = null;
+        if (room) {
+            try { await roomRequest('close', 'POST'); }
+            catch (error) { console.warn('No se pudo cerrar la sala', error); }
+        }
+        room = null;
+        roomBusy = false;
+        roomQueue.length = 0;
+        queuedIds.clear();
+        sessionStorage.removeItem('bth-room');
+        showScreen(initialScreen);
+        backgroundMusic.play().catch(() => {});
+    }
+
+    async function startScanning() {
+        backgroundMusic.pause(); // Detener música de fondo
+        clearExperience();
+        currentGameCategory = null;
+        isHandlingScan = false;
         showScreen(scannerScreen);
         qrStatusElement.textContent = "Buscando una tarjeta en la línea del tiempo...";
         await stopScanner();
@@ -387,6 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playVideo(videoId, videoCategory, startTime) {
         showScreen(playerContainer);
         scanAgainButton.classList.add('visible');
+        hostPlayButton.classList.toggle('visible', Boolean(room));
         if (window.myAppScope.isApiLoaded) {
             createPlayer(videoId, videoCategory, startTime);
         } else {
@@ -427,7 +565,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function onPlayerStateChange(event) {
-        if (event.data === YT.PlayerState.PLAYING) requestCaptionsOff(event);
+        if (event.data === YT.PlayerState.PLAYING) {
+            requestCaptionsOff(event);
+            hostPlayButton.classList.remove('visible');
+        }
         if (event.data === YT.PlayerState.PLAYING && preparationTimer === null) {
             preparationTimer = setTimeout(() => {
                 const playerElement = document.getElementById('player');
@@ -504,7 +645,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     startScanButton.addEventListener('click', startScanning);
-    scanAgainButton.addEventListener('click', startScanning);
+    createRoomButton.addEventListener('click', createRoom);
+    scanAgainButton.addEventListener('click', () => room ? returnToRoom() : startScanning());
+    homeButton.addEventListener('click', returnHome);
+    hostHomeButton.addEventListener('click', returnHome);
+    hostPlayButton.addEventListener('click', () => { if (gamePlayer) gamePlayer.playVideo(); });
+    try {
+        const savedRoom = JSON.parse(sessionStorage.getItem('bth-room') || 'null');
+        if (savedRoom && savedRoom.expiresAt > Date.now()) {
+            room = savedRoom;
+            backgroundMusic.pause();
+            showRoom();
+            pollRoom();
+            roomPollTimer = setInterval(pollRoom, 2000);
+        }
+    } catch (error) { sessionStorage.removeItem('bth-room'); }
     loadYouTubeAPIScript();
     const urlParams = new URLSearchParams(window.location.search);
     const isDevMode = urlParams.get('dev') === 'true';

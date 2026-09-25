@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0c143c">
+    <title>Escáner · Back to the Hitz</title>
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main id="guest-app" class="guest-page">
+        <section class="guest-card" aria-labelledby="guest-title">
+            <span class="hero-badge">ESCÁNER PERSONAL</span>
+            <h1 id="guest-title">Conecta con tu host</h1>
+            <p>Escanea tus tarjetas aquí. La pista se verá y escuchará en la pantalla principal.</p>
+            <form id="join-form" class="join-form">
+                <label for="guest-room-code">Código de sala</label>
+                <input id="guest-room-code" name="room" maxlength="7" autocomplete="off" autocapitalize="characters" required placeholder="ABCDEFG">
+                <button class="action-button" type="submit">Entrar a la sala</button>
+            </form>
+            <div id="guest-connected" hidden>
+                <p class="guest-room-line">Conectado a <strong id="guest-room-label"></strong></p>
+                <div id="qr-reader"></div>
+                <p id="guest-status" role="status">Preparando cámara...</p>
+                <button id="guest-scan-again" class="action-button" type="button" hidden>📷 Escanear otra tarjeta</button>
+                <button id="guest-leave" class="text-button" type="button">Salir de la sala</button>
+            </div>
+            <p id="guest-error" role="alert"></p>
+        </section>
+    </main>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" type="text/javascript"></script>
+    <script src="guest.js"></script>
+</body>
+</html>

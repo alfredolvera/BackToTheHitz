@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-function loadApp() {
+function loadApp(options = {}) {
     const elements = new Map();
     const timers = new Map();
     const intervals = new Map();
@@ -19,7 +19,8 @@ function loadApp() {
                 classList: {
                     add: name => classes.add(name),
                     remove: name => classes.delete(name),
-                    contains: name => classes.has(name)
+                    contains: name => classes.has(name),
+                    toggle(name, force) { if (force) classes.add(name); else classes.delete(name); }
                 },
                 style: { setProperty() {} },
                 addEventListener(name, callback) { this[name] = callback; },
@@ -68,10 +69,11 @@ function loadApp() {
     const window = { location: { search: '', href: 'https://example.test/' }, innerWidth: 812, innerHeight: 375, addEventListener() {} };
     const context = {
         window, document,
+        sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
         navigator: { userAgent: 'Chrome' },
         Audio: class { play() {}; pause() {}; currentTime = 0; },
         YT: { Player, PlayerState: { PLAYING: 1 } }, Html5Qrcode,
-        fetch: () => Promise.resolve({ json: () => Promise.resolve({}) }),
+        fetch: options.fetch || (() => Promise.resolve({ json: () => Promise.resolve({}) })),
         setTimeout(callback, delay) { const id = nextTimer++; timers.set(id, { callback, delay }); return id; },
         clearTimeout(id) { timers.delete(id); },
         setInterval(callback, delay) { const id = nextTimer++; intervals.set(id, { callback, delay }); return id; },
@@ -162,4 +164,36 @@ test('the QR scan box fits inside the visible camera preview on a short widescre
     assert.equal(app.scans.length, 1);
     assert.ok(app.scans[0].qrbox.width <= 165);
     assert.ok(app.scans[0].qrbox.height <= 165);
+});
+
+test('the left-side results button returns to the home screen', async () => {
+    const app = loadApp();
+    app.window.myAppScope.createPlayer('video-id', 'cine', null);
+    const player = app.players[1];
+    player.options.events.onStateChange({ data: 1, target: player });
+    [...app.timers.values()].find(timer => timer.delay === 7000).callback();
+    [...app.timers.values()].find(timer => timer.delay === 53000).callback();
+    assert.equal(app.element('home-button').classList.contains('visible'), true);
+    await app.element('home-button').click();
+    assert.equal(app.element('initial-screen').classList.contains('active'), true);
+    assert.equal(app.element('home-button').classList.contains('visible'), false);
+});
+
+test('a host room plays a submitted card and returns to the room without opening its camera', async () => {
+    let events = [{ id: '0000000001000-0123456789abcdef', videoId: 'abcdefghijk', category: 'cine', startTime: '12' }];
+    const fetch = async url => {
+        const action = new URL(url, 'https://example.test').searchParams.get('action');
+        const data = action === 'create' ? { code: 'ABCDEFG', hostToken: 'a'.repeat(64), expiresAt: Date.now() + 100000 }
+            : action === 'poll' ? { events } : { ok: true };
+        if (action === 'ack') events = [];
+        return { ok: true, json: async () => data };
+    };
+    const app = loadApp({ fetch });
+    await app.element('create-room-button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(app.element('player-container').classList.contains('active'), true);
+    assert.equal(app.players[1].options.videoId, 'abcdefghijk');
+    await app.element('scan-again-button').click();
+    assert.equal(app.element('host-screen').classList.contains('active'), true);
+    assert.equal(app.scans.length, 0);
 });
