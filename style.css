@@ -264,6 +264,12 @@ a:focus-visible {
     color: var(--color-primary);
 }
 
+.site-footer .app-version {
+    color: var(--color-cyan);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 #scanner-screen,
 #player-container {
     background:
