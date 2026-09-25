@@ -872,29 +872,87 @@ a:focus-visible {
 @media (orientation: landscape) and (min-width: 700px) {
     #host-screen { padding: clamp(10px, 1.8vh, 22px); overflow: hidden; }
     #host-screen .room-card {
-        width: min(96vw, 1120px);
-        max-height: calc(100dvh - 24px);
-        padding: clamp(14px, 2.3vh, 30px);
-        overflow: hidden;
-    }
-    #host-screen .hero-badge { margin-bottom: clamp(5px, 1vh, 10px); }
-    #host-screen h1 { margin-bottom: clamp(4px, 1vh, 10px); font-size: clamp(1.55rem, 4.3vh, 2.7rem); }
-    #host-screen .room-card > p { margin: 0 auto; max-width: 760px; font-size: clamp(0.88rem, 1.9vh, 1.08rem); }
-    #host-screen .room-details {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(220px, 0.65fr);
-        align-items: center;
-        gap: clamp(16px, 3vw, 40px);
-        width: min(100%, 850px);
-        margin: clamp(8px, 2vh, 20px) auto;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+        column-gap: clamp(20px, 4vw, 70px);
+        width: min(96vw, 1500px);
+        height: min(84dvh, 780px);
+        max-height: calc(100dvh - 24px);
+        padding: clamp(18px, 3.5vh, 44px);
+        overflow: hidden;
+        text-align: left;
     }
-    #host-screen .room-code { font-size: clamp(2.3rem, 8vh, 5rem); }
-    #host-screen #room-status { min-height: 2.5em; margin: clamp(6px, 1.5vh, 14px) auto 0; }
-    #host-screen #room-qr { width: min(29vh, 220px); margin: 0 auto; }
-    #host-screen .room-invite-panel p { margin: clamp(4px, 1vh, 9px) auto; line-height: 1.25; font-size: clamp(0.78rem, 1.6vh, 0.95rem); }
-    #host-screen #room-link { font-size: clamp(0.8rem, 1.6vh, 0.95rem); }
+    #host-screen .hero-badge {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+        margin: 0 0 clamp(8px, 1.4vh, 16px);
+        font-size: clamp(0.8rem, 1.6vh, 1rem);
+    }
+    #host-screen h1 {
+        grid-column: 1;
+        grid-row: 2;
+        margin: 0 0 clamp(8px, 1.5vh, 16px);
+        font-size: clamp(2rem, 5.5vh, 4rem);
+        line-height: 1.07;
+    }
+    #host-screen .room-intro {
+        grid-column: 1;
+        grid-row: 3;
+        max-width: 620px;
+        margin: 0;
+        font-size: clamp(1.08rem, 2.25vh, 1.55rem);
+        line-height: 1.4;
+    }
+    #host-screen .room-details {
+        display: contents;
+    }
+    #host-screen .room-code-panel {
+        grid-column: 1;
+        grid-row: 4;
+        align-self: center;
+        min-width: 0;
+        padding-block: clamp(10px, 2vh, 26px);
+    }
+    #host-screen .room-code-label { margin: 0 0 8px; font-size: clamp(0.9rem, 1.8vh, 1.1rem); }
+    #host-screen .room-code { font-size: clamp(3.1rem, 10vh, 7rem); letter-spacing: 0.11em; }
+    #host-screen #room-status {
+        min-height: 0;
+        margin: clamp(10px, 2vh, 22px) 0 0;
+        font-size: clamp(1rem, 2.1vh, 1.35rem);
+        line-height: 1.3;
+    }
+    #host-screen .room-invite-panel {
+        grid-column: 2;
+        grid-row: 1 / 7;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        padding-left: clamp(18px, 3vw, 50px);
+        border-left: 1px solid rgba(35, 213, 255, 0.24);
+        text-align: center;
+    }
+    #host-screen #room-qr { width: min(46vh, 430px); max-width: 100%; margin: 0 auto; padding: clamp(10px, 1.3vh, 16px); }
+    #host-screen .room-invite-panel p {
+        max-width: 430px;
+        margin: clamp(10px, 1.8vh, 20px) auto 0;
+        line-height: 1.35;
+        font-size: clamp(0.95rem, 1.9vh, 1.2rem);
+    }
+    #host-screen #room-link { margin-top: 8px; font-size: clamp(0.9rem, 1.8vh, 1.1rem); }
+    #host-screen #room-error { grid-column: 1; grid-row: 5; margin: 0 0 8px; }
     #host-screen #room-error:empty { display: none; }
-    #host-screen #host-home-button { min-height: 42px; padding: 10px 20px; }
+    #host-screen #host-home-button {
+        grid-column: 1;
+        grid-row: 6;
+        justify-self: start;
+        min-height: 54px;
+        padding: 12px 24px;
+        font-size: clamp(1rem, 2vh, 1.2rem);
+    }
 }
 
 #wave-background {
