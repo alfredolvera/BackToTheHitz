@@ -49,11 +49,13 @@ function loadApp() {
             this.volume = 80;
             this.paused = false;
             this.captionOptions = [];
+            this.seeks = [];
             players.push(this);
         }
         getVolume() { return this.volume; }
         setVolume(value) { this.volume = value; }
         setOption(module, option, value) { this.captionOptions.push({ module, option, value }); }
+        seekTo(time, allowSeekAhead) { this.seeks.push({ time, allowSeekAhead }); }
         pauseVideo() { this.paused = true; }
         playVideo() {}
         destroy() {}
@@ -100,6 +102,7 @@ test('the 60-second experience shows the clue for 53 seconds and fades audio dur
     const app = loadApp();
     app.window.myAppScope.createPlayer('video-id', 'cine', null);
     const player = app.players[1];
+    player.options.events.onReady({ target: player });
     player.options.events.onStateChange({ data: 1, target: player });
     const preparation = [...app.timers.values()].find(timer => timer.delay === 7000);
     preparation.callback();
@@ -123,6 +126,19 @@ test('the 60-second experience shows the clue for 53 seconds and fades audio dur
     assert.equal(app.element('times-up-screen').classList.contains('active'), true);
     assert.equal(player.volume, 0);
     assert.equal(player.paused, true);
+});
+
+test('the seven-second introduction stays silent and the clue starts at the card timestamp', () => {
+    const app = loadApp();
+    app.window.myAppScope.createPlayer('video-id', 'cine', '42');
+    const player = app.players[1];
+    player.options.events.onReady({ target: player });
+    assert.equal(player.volume, 0);
+    player.options.events.onStateChange({ data: 1, target: player });
+    assert.equal(player.volume, 0);
+    [...app.timers.values()].find(timer => timer.delay === 7000).callback();
+    assert.deepEqual(player.seeks, [{ time: 42, allowSeekAhead: true }]);
+    assert.equal(player.volume, 80);
 });
 
 test('the temporal year display keeps shuffling for 5 seconds', () => {

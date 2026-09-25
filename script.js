@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variables de estado
     let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null, fadeStartTimer = null;
     let volumeFadeTimer = null, yearShuffleTimer = null;
+    let clueStartTime = 0, clueVolume = 100;
     let currentGameCategory = null;
     let replacements = {};
     let lastCameraId = null;
@@ -408,21 +409,30 @@ document.addEventListener('DOMContentLoaded', () => {
         starfield.classList.add('visible');
         warpSpeedSound.play();
         const playerVars = { 'autoplay': 1, 'mute': 0, 'controls': 1, 'rel': 0, 'cc_load_policy': 0 };
-        if (startTime) playerVars.start = parseInt(startTime, 10);
+        clueStartTime = startTime ? parseInt(startTime, 10) : 0;
+        if (clueStartTime) playerVars.start = clueStartTime;
         gamePlayer = new YT.Player('player', {
             videoId: videoId,
             playerVars: playerVars,
-            events: { 'onReady': requestCaptionsOff, 'onApiChange': requestCaptionsOff, 'onStateChange': onPlayerStateChange }
+            events: { 'onReady': onGamePlayerReady, 'onApiChange': requestCaptionsOff, 'onStateChange': onPlayerStateChange }
         });
     }
 
     window.myAppScope.createPlayer = createPlayer;
+
+    function onGamePlayerReady(event) {
+        requestCaptionsOff(event);
+        clueVolume = event.target.getVolume();
+        event.target.setVolume(0);
+    }
 
     function onPlayerStateChange(event) {
         if (event.data === YT.PlayerState.PLAYING) requestCaptionsOff(event);
         if (event.data === YT.PlayerState.PLAYING && preparationTimer === null) {
             preparationTimer = setTimeout(() => {
                 const playerElement = document.getElementById('player');
+                gamePlayer.seekTo(clueStartTime, true);
+                gamePlayer.setVolume(clueVolume);
                 countdownMessage.classList.remove('visible');
                 starfield.classList.remove('visible');
                 if (currentGameCategory === 'musica_audio') {
