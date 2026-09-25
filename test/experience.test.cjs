@@ -11,6 +11,8 @@ function loadApp(options = {}) {
     const scans = [];
     const audios = [];
     let nextTimer = 1;
+    let now = 0;
+    let randomDraw = 0;
 
     function element(id) {
         if (!elements.has(id)) {
@@ -23,7 +25,7 @@ function loadApp(options = {}) {
                     contains: name => classes.has(name),
                     toggle(name, force) { if (force) classes.add(name); else classes.delete(name); }
                 },
-                style: { setProperty() {} },
+                style: { values: {}, setProperty(name, value) { this.values[name] = value; } },
                 addEventListener(name, callback) { this[name] = callback; },
                 removeEventListener() {},
                 appendChild() {},
@@ -83,15 +85,17 @@ function loadApp(options = {}) {
         clearTimeout(id) { timers.delete(id); },
         setInterval(callback, delay) { const id = nextTimer++; intervals.set(id, { callback, delay }); return id; },
         clearInterval(id) { intervals.delete(id); },
-        URL, URLSearchParams, console
+        URL, URLSearchParams, console,
+        Date: class extends Date { static now() { return now; } },
+        Math: Object.assign(Object.create(Math), { random: options.random || (() => (randomDraw++ % 10000) / 10000) })
     };
     vm.runInNewContext(fs.readFileSync('script.js', 'utf8'), context);
     window.onYouTubeIframeAPIReady();
-    return { window, element, players, timers, intervals, scans, audios };
+    return { window, element, players, timers, intervals, scans, audios, advance(milliseconds) { now += milliseconds; } };
 }
 
-function startRound(app, startTime = null) {
-    app.window.myAppScope.playVideo('abcdefghijk', 'cine', startTime);
+function startRound(app, startTime = null, category = 'cine') {
+    app.window.myAppScope.playVideo('abcdefghijk', category, startTime);
     const player = app.players[1];
     player.options.events.onReady({ target: player });
     app.audios[0].onended();
@@ -165,6 +169,28 @@ test('the video starts audibly after the travel sound and stays hidden for seven
     assert.equal(app.element('countdown-message').classList.contains('visible'), false);
 });
 
+test('video and music show the remaining 70-second clue time only after the travel overlay clears', () => {
+    for (const category of ['cine', 'musica_audio']) {
+        const app = loadApp();
+        startRound(app, null, category);
+        const timer = app.element('clue-timer');
+        assert.equal(timer.classList.contains('visible'), false);
+        app.advance(7000);
+        [...app.timers.values()].find(item => item.delay === 7000).callback();
+        assert.equal(timer.classList.contains('visible'), true);
+        const tick = [...app.intervals.values()].find(item => item.delay === 250);
+        assert.ok(tick);
+        tick.callback();
+        assert.equal(app.element('clue-time-remaining').textContent, '01:03');
+        assert.equal(timer.style.values['--clue-progress'], '90%');
+        app.advance(60000);
+        tick.callback();
+        assert.equal(app.element('clue-time-remaining').textContent, '00:03');
+        [...app.timers.values()].find(item => item.delay === 70000).callback();
+        assert.equal(timer.classList.contains('visible'), false);
+    }
+});
+
 test('the YouTube player is prepared but does not play until the travel sound finishes', async () => {
     const app = loadApp();
     app.window.myAppScope.playVideo('abcdefghijk', 'cine', '42');
@@ -192,20 +218,21 @@ test('if the travel sound ends while YouTube loads, playback starts when the pla
     assert.equal(player.volume, 80);
 });
 
-test('the temporal year display keeps shuffling for 5 seconds', () => {
+test('the temporal coordinates shuffle unique four-digit numbers from the full range for 5 seconds', () => {
     const app = loadApp();
     startRound(app);
     [...app.timers.values()].find(timer => timer.delay === 7000).callback();
     [...app.timers.values()].find(timer => timer.delay === 70000).callback();
     const yearInterval = [...app.intervals.values()].find(interval => interval.delay === 100);
     assert.ok(yearInterval);
-    const displayedYears = [Number(app.element('temporal-year').textContent)];
+    const displayedYears = [app.element('temporal-year').textContent];
     for (let step = 0; step < 49; step++) {
         yearInterval.callback();
-        displayedYears.push(Number(app.element('temporal-year').textContent));
+        displayedYears.push(app.element('temporal-year').textContent);
     }
     assert.equal(new Set(displayedYears).size, 50);
-    assert.ok(displayedYears.every(year => year >= 1885 && year <= 2026));
+    assert.ok(displayedYears.every(value => /^\d{4}$/.test(value)));
+    assert.ok(displayedYears.some(value => Number(value) < 1885 || Number(value) > 2026));
     assert.notEqual(app.element('temporal-year').textContent, '????');
     yearInterval.callback();
     assert.equal(app.element('temporal-year').textContent, '????');

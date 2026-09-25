@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const scannerScreen = document.getElementById('scanner-screen');
     const timesUpScreen = document.getElementById('times-up-screen');
     const countdownMessage = document.getElementById('countdown-message');
+    const clueTimer = document.getElementById('clue-timer');
+    const clueTimeRemaining = document.getElementById('clue-time-remaining');
     const startScanButton = document.getElementById('start-scan-button');
     const createRoomButton = document.getElementById('create-room-button');
     const hostScreen = document.getElementById('host-screen');
@@ -82,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Variables de estado
     let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null, fadeStartTimer = null;
-    let volumeFadeTimer = null, yearShuffleTimer = null;
+    let volumeFadeTimer = null, yearShuffleTimer = null, clueTimerInterval = null;
+    let clueStartedAt = null;
     let clueStartTime = 0, clueVolume = 100;
     let travelSoundFinished = false, playerReady = false, hiddenPlaybackStarted = false;
     let playbackGeneration = 0;
@@ -217,10 +220,12 @@ document.addEventListener('DOMContentLoaded', () => {
         warpSpeedSound.onerror = null;
         if (volumeFadeTimer) clearInterval(volumeFadeTimer);
         if (yearShuffleTimer) clearInterval(yearShuffleTimer);
+        if (clueTimerInterval) clearInterval(clueTimerInterval);
         if (fadeStartTimer) clearTimeout(fadeStartTimer);
         if (preparationTimer) clearTimeout(preparationTimer);
         if (gameTimer) clearTimeout(gameTimer);
-        volumeFadeTimer = yearShuffleTimer = fadeStartTimer = preparationTimer = gameTimer = null;
+        volumeFadeTimer = yearShuffleTimer = clueTimerInterval = fadeStartTimer = preparationTimer = gameTimer = null;
+        clueStartedAt = null;
         if (gamePlayer) gamePlayer.destroy();
         gamePlayer = null;
         window.myAppScope.pendingVideo = undefined;
@@ -229,6 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('player').classList.remove('ready');
         countdownMessage.classList.remove('visible');
         countdownMessage.classList.remove('video-playing');
+        clueTimer.classList.remove('visible');
+        clueTimer.classList.remove('urgent');
+        clueTimer.setAttribute('aria-hidden', 'true');
+        clueTimer.style.setProperty('--clue-progress', '100%');
+        clueTimeRemaining.textContent = '01:10';
         starfield.classList.remove('visible');
         waveBackground.classList.remove('visible');
         musicVisualizerContainer.classList.remove('visible');
@@ -529,6 +539,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function playVideo(videoId, videoCategory, startTime) {
         const generation = ++playbackGeneration;
         travelSoundFinished = playerReady = hiddenPlaybackStarted = false;
+        if (clueTimerInterval) clearInterval(clueTimerInterval);
+        clueTimerInterval = null;
+        clueTimer.classList.remove('visible');
+        clueTimer.classList.remove('urgent');
+        clueTimer.setAttribute('aria-hidden', 'true');
+        clueTimer.style.setProperty('--clue-progress', '100%');
+        clueTimeRemaining.textContent = '01:10';
+        clueStartedAt = null;
         countdownMessage.classList.add('visible');
         countdownMessage.classList.remove('video-playing');
         starfield.classList.add('visible');
@@ -601,6 +619,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (event.data === YT.PlayerState.PLAYING && hiddenPlaybackStarted && preparationTimer === null) {
             countdownMessage.classList.add('video-playing');
+            clueStartedAt = Date.now();
+            updateClueTimer();
+            clueTimerInterval = setInterval(updateClueTimer, 250);
             preparationTimer = setTimeout(() => {
                 const playerElement = document.getElementById('player');
                 countdownMessage.classList.remove('visible');
@@ -612,13 +633,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     if (playerElement) playerElement.classList.add('ready');
                 }
+                updateClueTimer();
+                clueTimer.classList.add('visible');
+                clueTimer.setAttribute('aria-hidden', 'false');
             }, 7000);
             fadeStartTimer = setTimeout(fadeOutGamePlayer, 67000);
             gameTimer = setTimeout(endGame, 70000);
         }
     }
 
+    function updateClueTimer() {
+        if (clueStartedAt === null) return;
+        const remaining = Math.max(0, 70000 - (Date.now() - clueStartedAt));
+        const seconds = Math.ceil(remaining / 1000);
+        clueTimeRemaining.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+        clueTimer.style.setProperty('--clue-progress', `${Math.round(remaining / 700)}%`);
+        clueTimer.classList.toggle('urgent', remaining <= 10000);
+    }
+
     function endGame(){
+        if (clueTimerInterval) clearInterval(clueTimerInterval);
+        clueTimerInterval = null;
+        clueTimer.classList.remove('visible');
+        clueTimer.classList.remove('urgent');
+        clueTimer.setAttribute('aria-hidden', 'true');
         if (fadeStartTimer) clearTimeout(fadeStartTimer);
         if (volumeFadeTimer) clearInterval(volumeFadeTimer);
         fadeStartTimer = null;
@@ -641,13 +679,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function shuffleTemporalYear() {
         let frame = 0;
-        const years = Array.from({ length: 2026 - 1885 + 1 }, (_, index) => 1885 + index);
-        for (let index = years.length - 1; index > 0; index--) {
-            const randomIndex = Math.floor(Math.random() * (index + 1));
-            [years[index], years[randomIndex]] = [years[randomIndex], years[index]];
-        }
+        const displayed = new Set();
+        const nextCoordinate = () => {
+            let value;
+            do { value = Math.floor(Math.random() * 10000); } while (displayed.has(value));
+            displayed.add(value);
+            return String(value).padStart(4, '0');
+        };
         timesUpScreen.classList.remove('year-revealed');
-        temporalYear.textContent = String(years[0]);
+        temporalYear.textContent = nextCoordinate();
         yearShuffleTimer = setInterval(() => {
             frame += 1;
             if (frame >= 50) {
@@ -656,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(yearShuffleTimer);
                 yearShuffleTimer = null;
             } else {
-                temporalYear.textContent = String(years[frame]);
+                temporalYear.textContent = nextCoordinate();
             }
         }, 100);
     }

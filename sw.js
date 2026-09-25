@@ -1,4 +1,4 @@
-const CACHE_NAME = 'back-to-the-hitz-v35';
+const CACHE_NAME = 'back-to-the-hitz-v36';
 
 const URLS_TO_CACHE = [
   '/',
@@ -11,6 +11,9 @@ const URLS_TO_CACHE = [
   'fullscreen.css',
   'fullscreen.js',
   'script.js',
+  'replacements.json',
+  'travel-lightning.webp',
+  'travel-lightning-portrait.webp',
   'manifest.json',
   'weblogo.png',
   'effect.mp3',

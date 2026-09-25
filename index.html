@@ -22,7 +22,6 @@
     <main id="app">
         <div id="initial-screen" class="screen active">
             <section class="hero-card" aria-labelledby="hero-title">
-                <span class="hero-badge">2026 Edition · +900 tarjetas</span>
                 <img id="logo" src="weblogo.png" alt="Back to the Hitz Logo">
                 <p id="hero-title" class="hero-copy">Escanea una tarjeta, viaja entre décadas y adivina el año de canciones, películas y videojuegos antes de que Biff altere la línea del tiempo.</p>
                 <div class="actions-container">
@@ -32,7 +31,7 @@
                 </div>
             </section>
             <footer class="site-footer">
-                <p><strong>NO COMPATIBLE CON SAFARI</strong>. 2026. Por Alfredo, dedicado para el amor de su vida: Rebeca. 💖 · <span class="app-version" aria-label="Versión de la aplicación">v2026.3.5</span></p>
+                <p><strong>NO COMPATIBLE CON SAFARI</strong>. 2026. Por Alfredo, dedicado para el amor de su vida: Rebeca. 💖 · <span class="app-version" aria-label="Versión de la aplicación">v2026.3.6</span></p>
             </footer>
         </div>
 
@@ -72,7 +71,7 @@
                 <div class="wave"></div><div class="wave"></div><div class="wave"></div>
             </div>
             <div id="starfield" class="fullscreen-bg">
-                <div id="stars1"></div><div id="stars2"></div><div id="stars3"></div>
+                <div class="travel-lightning-art" aria-hidden="true"></div>
             </div>
             <div id="music-visualizer-container" class="screen-overlay">
                 <h1>Escucha con atención...</h1>
@@ -82,11 +81,20 @@
             </div>
             <div id="player"></div>
             <div id="click-blocker"></div>
+            <div id="clue-timer" class="clue-timer" role="timer" aria-label="Tiempo restante para adivinar" aria-hidden="true">
+                <div class="clue-timer-heading"><span>TIEMPO PARA ADIVINAR</span><strong id="clue-time-remaining">01:10</strong></div>
+                <div class="clue-timer-track" aria-hidden="true"><span class="clue-timer-fill"></span></div>
+            </div>
             <div id="countdown-message" class="screen-overlay">
                 <div class="countdown-text-container">
-                    <span class="small-text">Condensador de flujo activado</span>
-                    <span class="large-text">Prepárate: tendrás 70 segundos para adivinar el año.</span>
-                    <span class="countdown-progress" aria-hidden="true"></span>
+                    <div class="travel-lights" aria-hidden="true"><i></i><i></i><i></i></div>
+                    <span class="small-text">CONDENSADOR DE FLUJO ACTIVADO</span>
+                    <span class="travel-lcd" aria-hidden="true">
+                        <svg viewBox="0 0 156 124" fill="currentColor"><defs><g id="travel-eight"><path d="M13 2h45l8 7-8 7H13L5 9zM13 53h45l8 7-8 7H13l-8-7zM13 105h45l8 7-8 7H13l-8-7zM3 12l8 7v31l-8 7-5-7V19zM68 12l5 7v31l-5 7-8-7V19zM3 65l8 7v30l-8 7-5-7V72zM68 65l5 7v30l-5 7-8-7V72z"/></g></defs><use href="#travel-eight" x="2"/><use href="#travel-eight" x="80"/></svg>
+                        <small>MPH</small>
+                    </span>
+                    <span class="large-text">Viajando en el tiempo</span>
+                    <span class="travel-subtext">Prepara tus oídos. La pista está por aparecer.</span>
                 </div>
             </div>
         </div>
