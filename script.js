@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const hostScreen = document.getElementById('host-screen');
     const hostHomeButton = document.getElementById('host-home-button');
     const homeButton = document.getElementById('home-button');
-    const hostPlayButton = document.getElementById('host-play-button');
     const scanAgainButton = document.getElementById('scan-again-button');
     const qrStatusElement = document.getElementById('qr-reader-status');
     const starfield = document.getElementById('starfield');
@@ -85,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null, fadeStartTimer = null;
     let volumeFadeTimer = null, yearShuffleTimer = null;
     let clueStartTime = 0, clueVolume = 100;
+    let travelSoundFinished = false, playerReady = false, hiddenPlaybackStarted = false;
+    let playbackGeneration = 0;
     let currentGameCategory = null;
     let replacements = {};
     let lastCameraId = null;
@@ -129,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function showRoom() {
         showScreen(hostScreen);
         scanAgainButton.classList.remove('visible');
-        hostPlayButton.classList.remove('visible');
         document.getElementById('room-details').hidden = false;
         document.getElementById('room-code').textContent = room.code;
         const inviteUrl = new URL('guest.html', window.location.href);
@@ -211,6 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function clearExperience() {
+        playbackGeneration++;
+        travelSoundFinished = playerReady = hiddenPlaybackStarted = false;
+        warpSpeedSound.onended = null;
+        warpSpeedSound.onerror = null;
         if (volumeFadeTimer) clearInterval(volumeFadeTimer);
         if (yearShuffleTimer) clearInterval(yearShuffleTimer);
         if (fadeStartTimer) clearTimeout(fadeStartTimer);
@@ -224,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         warpSpeedSound.currentTime = 0;
         document.getElementById('player').classList.remove('ready');
         countdownMessage.classList.remove('visible');
+        countdownMessage.classList.remove('video-warming');
         starfield.classList.remove('visible');
         waveBackground.classList.remove('visible');
         musicVisualizerContainer.classList.remove('visible');
@@ -522,14 +527,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playVideo(videoId, videoCategory, startTime) {
+        const generation = ++playbackGeneration;
+        travelSoundFinished = playerReady = hiddenPlaybackStarted = false;
+        countdownMessage.classList.add('visible');
+        starfield.classList.add('visible');
+        document.getElementById('player').classList.remove('ready');
         showScreen(playerContainer);
         scanAgainButton.classList.add('visible');
-        hostPlayButton.classList.toggle('visible', Boolean(room));
+        warpSpeedSound.currentTime = 0;
+        const finishSound = () => {
+            if (generation !== playbackGeneration || travelSoundFinished) return;
+            travelSoundFinished = true;
+            startHiddenPlayback();
+        };
+        warpSpeedSound.onended = finishSound;
+        warpSpeedSound.onerror = finishSound;
         if (window.myAppScope.isApiLoaded) {
             createPlayer(videoId, videoCategory, startTime);
         } else {
             window.myAppScope.pendingVideo = { id: videoId, category: videoCategory, startTime: startTime };
         }
+        try {
+            const soundPromise = warpSpeedSound.play();
+            if (soundPromise && typeof soundPromise.catch === 'function') soundPromise.catch(finishSound);
+        } catch (error) { finishSound(); }
     }
 
     function loadYouTubeAPIScript(){
@@ -543,10 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gamePlayer) gamePlayer.destroy();
         gamePlayer = null;
         currentGameCategory = videoCategory;
-        countdownMessage.classList.add('visible');
-        starfield.classList.add('visible');
-        warpSpeedSound.play();
-        const playerVars = { 'autoplay': 1, 'mute': 0, 'controls': 1, 'rel': 0, 'cc_load_policy': 0 };
+        const playerVars = { 'autoplay': 0, 'mute': 0, 'controls': 0, 'rel': 0, 'cc_load_policy': 0, 'playsinline': 1 };
         clueStartTime = startTime ? parseInt(startTime, 10) : 0;
         if (clueStartTime) playerVars.start = clueStartTime;
         gamePlayer = new YT.Player('player', {
@@ -557,23 +575,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.myAppScope.createPlayer = createPlayer;
+    window.myAppScope.playVideo = playVideo;
 
     function onGamePlayerReady(event) {
+        if (event.target !== gamePlayer) return;
         requestCaptionsOff(event);
         clueVolume = event.target.getVolume();
         event.target.setVolume(0);
+        playerReady = true;
+        startHiddenPlayback();
+    }
+
+    function startHiddenPlayback() {
+        if (!travelSoundFinished || !playerReady || !gamePlayer || hiddenPlaybackStarted) return;
+        hiddenPlaybackStarted = true;
+        gamePlayer.setVolume(clueVolume);
+        gamePlayer.playVideo();
     }
 
     function onPlayerStateChange(event) {
+        if (event.target !== gamePlayer) return;
         if (event.data === YT.PlayerState.PLAYING) {
             requestCaptionsOff(event);
-            hostPlayButton.classList.remove('visible');
         }
-        if (event.data === YT.PlayerState.PLAYING && preparationTimer === null) {
+        if (event.data === YT.PlayerState.PLAYING && hiddenPlaybackStarted && preparationTimer === null) {
             preparationTimer = setTimeout(() => {
                 const playerElement = document.getElementById('player');
-                gamePlayer.seekTo(clueStartTime, true);
-                gamePlayer.setVolume(clueVolume);
                 countdownMessage.classList.remove('visible');
                 starfield.classList.remove('visible');
                 if (currentGameCategory === 'musica_audio') {
@@ -583,9 +610,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     if (playerElement) playerElement.classList.add('ready');
                 }
-                fadeStartTimer = setTimeout(fadeOutGamePlayer, 50000);
-                gameTimer = setTimeout(endGame, 53000);
             }, 7000);
+            fadeStartTimer = setTimeout(fadeOutGamePlayer, 67000);
+            gameTimer = setTimeout(endGame, 70000);
         }
     }
 
@@ -649,7 +676,6 @@ document.addEventListener('DOMContentLoaded', () => {
     scanAgainButton.addEventListener('click', () => room ? returnToRoom() : startScanning());
     homeButton.addEventListener('click', returnHome);
     hostHomeButton.addEventListener('click', returnHome);
-    hostPlayButton.addEventListener('click', () => { if (gamePlayer) gamePlayer.playVideo(); });
     try {
         const savedRoom = JSON.parse(sessionStorage.getItem('bth-room') || 'null');
         if (savedRoom && savedRoom.expiresAt > Date.now()) {

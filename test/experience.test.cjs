@@ -9,6 +9,7 @@ function loadApp(options = {}) {
     const intervals = new Map();
     const players = [];
     const scans = [];
+    const audios = [];
     let nextTimer = 1;
 
     function element(id) {
@@ -51,6 +52,8 @@ function loadApp(options = {}) {
             this.paused = false;
             this.captionOptions = [];
             this.seeks = [];
+            this.playCount = 0;
+            this.muted = false;
             players.push(this);
         }
         getVolume() { return this.volume; }
@@ -58,7 +61,9 @@ function loadApp(options = {}) {
         setOption(module, option, value) { this.captionOptions.push({ module, option, value }); }
         seekTo(time, allowSeekAhead) { this.seeks.push({ time, allowSeekAhead }); }
         pauseVideo() { this.paused = true; }
-        playVideo() {}
+        playVideo() { this.playCount++; }
+        mute() { this.muted = true; }
+        unMute() { this.muted = false; }
         destroy() {}
     }
     class Html5Qrcode {
@@ -71,7 +76,7 @@ function loadApp(options = {}) {
         window, document,
         sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
         navigator: { userAgent: 'Chrome' },
-        Audio: class { play() {}; pause() {}; currentTime = 0; },
+        Audio: class { constructor() { audios.push(this); } play() { this.playCount = (this.playCount || 0) + 1; return Promise.resolve(); } pause() {}; currentTime = 0; },
         YT: { Player, PlayerState: { PLAYING: 1 } }, Html5Qrcode,
         fetch: options.fetch || (() => Promise.resolve({ json: () => Promise.resolve({}) })),
         setTimeout(callback, delay) { const id = nextTimer++; timers.set(id, { callback, delay }); return id; },
@@ -82,7 +87,16 @@ function loadApp(options = {}) {
     };
     vm.runInNewContext(fs.readFileSync('script.js', 'utf8'), context);
     window.onYouTubeIframeAPIReady();
-    return { window, element, players, timers, intervals, scans };
+    return { window, element, players, timers, intervals, scans, audios };
+}
+
+function startRound(app, startTime = null) {
+    app.window.myAppScope.playVideo('abcdefghijk', 'cine', startTime);
+    const player = app.players[1];
+    player.options.events.onReady({ target: player });
+    app.audios[0].onended();
+    player.options.events.onStateChange({ data: 1, target: player });
+    return player;
 }
 
 test('YouTube players request captions off on load and when caption options become available', () => {
@@ -100,16 +114,13 @@ test('YouTube players request captions off on load and when caption options beco
     }
 });
 
-test('the 60-second experience shows the clue for 53 seconds and fades audio during its last 3 seconds', () => {
+test('the video runs for 70 seconds including its hidden prelude and fades audio during the last 3', () => {
     const app = loadApp();
-    app.window.myAppScope.createPlayer('video-id', 'cine', null);
-    const player = app.players[1];
-    player.options.events.onReady({ target: player });
-    player.options.events.onStateChange({ data: 1, target: player });
+    const player = startRound(app);
     const preparation = [...app.timers.values()].find(timer => timer.delay === 7000);
     preparation.callback();
-    const fade = [...app.timers.values()].find(timer => timer.delay === 50000);
-    const game = [...app.timers.values()].find(timer => timer.delay === 53000);
+    const fade = [...app.timers.values()].find(timer => timer.delay === 67000);
+    const game = [...app.timers.values()].find(timer => timer.delay === 70000);
     assert.ok(fade);
     assert.ok(game);
     assert.equal(app.element('times-up-screen').classList.contains('active'), false);
@@ -130,25 +141,60 @@ test('the 60-second experience shows the clue for 53 seconds and fades audio dur
     assert.equal(player.paused, true);
 });
 
-test('the seven-second introduction stays silent and the clue starts at the card timestamp', () => {
+test('the video starts audibly after the travel sound and stays hidden for seven seconds', () => {
     const app = loadApp();
-    app.window.myAppScope.createPlayer('video-id', 'cine', '42');
+    app.window.myAppScope.playVideo('abcdefghijk', 'cine', '42');
     const player = app.players[1];
     player.options.events.onReady({ target: player });
     assert.equal(player.volume, 0);
+    assert.equal(player.playCount, 0);
+    assert.equal(player.options.playerVars.start, 42);
+    assert.equal(player.options.playerVars.controls, 0);
+    assert.equal(app.element('player').classList.contains('ready'), false);
+    app.audios[0].onended();
+    assert.equal(player.volume, 80);
+    assert.equal(player.playCount, 1);
+    assert.equal(app.element('player').classList.contains('ready'), false);
     player.options.events.onStateChange({ data: 1, target: player });
-    assert.equal(player.volume, 0);
     [...app.timers.values()].find(timer => timer.delay === 7000).callback();
-    assert.deepEqual(player.seeks, [{ time: 42, allowSeekAhead: true }]);
+    assert.deepEqual(player.seeks, []);
+    assert.equal(player.volume, 80);
+    assert.equal(app.element('player').classList.contains('ready'), true);
+    assert.equal(app.element('countdown-message').classList.contains('visible'), false);
+});
+
+test('the YouTube player is prepared but does not play until the travel sound finishes', async () => {
+    const app = loadApp();
+    app.window.myAppScope.playVideo('abcdefghijk', 'cine', '42');
+    assert.equal(app.audios[0].playCount, 1);
+    assert.equal(app.players.length, 2);
+    const player = app.players[1];
+    player.options.events.onReady({ target: player });
+    assert.equal(player.playCount, 0);
+    assert.equal([...app.timers.values()].some(timer => timer.delay === 7000), false);
+    assert.equal(app.element('countdown-message').classList.contains('visible'), true);
+    app.audios[0].onended();
+    assert.equal(player.playCount, 1);
+    assert.equal(app.element('player').classList.contains('ready'), false);
+    assert.equal([...app.timers.values()].some(timer => timer.delay === 7000), false);
+});
+
+test('if the travel sound ends while YouTube loads, playback starts when the player is ready', () => {
+    const app = loadApp();
+    app.window.myAppScope.playVideo('abcdefghijk', 'cine', null);
+    const player = app.players[1];
+    app.audios[0].onended();
+    assert.equal(player.playCount, 0);
+    player.options.events.onReady({ target: player });
+    assert.equal(player.playCount, 1);
     assert.equal(player.volume, 80);
 });
 
 test('the temporal year display keeps shuffling for 5 seconds', () => {
     const app = loadApp();
-    app.window.myAppScope.createPlayer('video-id', 'cine', null);
-    app.players[1].options.events.onStateChange({ data: 1, target: app.players[1] });
+    startRound(app);
     [...app.timers.values()].find(timer => timer.delay === 7000).callback();
-    [...app.timers.values()].find(timer => timer.delay === 53000).callback();
+    [...app.timers.values()].find(timer => timer.delay === 70000).callback();
     const yearInterval = [...app.intervals.values()].find(interval => interval.delay === 100);
     assert.ok(yearInterval);
     for (let step = 0; step < 49; step++) yearInterval.callback();
@@ -168,11 +214,9 @@ test('the QR scan box fits inside the visible camera preview on a short widescre
 
 test('the left-side results button returns to the home screen', async () => {
     const app = loadApp();
-    app.window.myAppScope.createPlayer('video-id', 'cine', null);
-    const player = app.players[1];
-    player.options.events.onStateChange({ data: 1, target: player });
+    startRound(app);
     [...app.timers.values()].find(timer => timer.delay === 7000).callback();
-    [...app.timers.values()].find(timer => timer.delay === 53000).callback();
+    [...app.timers.values()].find(timer => timer.delay === 70000).callback();
     assert.equal(app.element('home-button').classList.contains('visible'), true);
     await app.element('home-button').click();
     assert.equal(app.element('initial-screen').classList.contains('active'), true);

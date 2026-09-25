@@ -220,6 +220,19 @@ a:focus-visible {
     box-shadow: 0 0 36px rgba(255, 193, 7, 0.58), 0 18px 34px rgba(0, 0, 0, 0.42);
 }
 
+.mode-button {
+    min-width: min(100%, 285px);
+    border-color: rgba(35, 213, 255, 0.7);
+    color: #e7fbff;
+    background: linear-gradient(140deg, #174a67, #0c2946);
+    box-shadow: 0 0 24px rgba(35, 213, 255, 0.18), 0 14px 28px rgba(0, 0, 0, 0.32);
+}
+
+.mode-button:hover {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 32px rgba(35, 213, 255, 0.35), 0 18px 34px rgba(0, 0, 0, 0.42);
+}
+
 .action-button:active,
 #rules-button:active {
     transform: translateY(1px) scale(0.99);
@@ -414,6 +427,7 @@ a:focus-visible {
     height: 100%;
     aspect-ratio: 16 / 9;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.8s ease-in-out;
 }
 
@@ -787,9 +801,6 @@ a:focus-visible {
 
 #home-button.visible { display: flex; }
 
-#host-play-button { position: absolute; top: 50%; left: 50%; z-index: 20; display: none; transform: translate(-50%, -50%); }
-#host-play-button.visible { display: flex; }
-#host-play-button:hover { transform: translate(-50%, -52%); }
 
 .secondary-button {
     border: 1px solid rgba(35, 213, 255, 0.62);
