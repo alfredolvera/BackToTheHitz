@@ -32,6 +32,10 @@ body {
     font-family: var(--font-body);
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body::before {
     content: '';
     position: fixed;
@@ -727,7 +731,11 @@ a:focus-visible {
     height: 100%;
     border-radius: inherit;
     background: linear-gradient(90deg, var(--color-cyan), var(--color-primary));
-    animation: countdown-load 7s linear forwards;
+    transform: translateX(-100%);
+}
+
+#countdown-message.video-playing .countdown-progress::before {
+    animation: countdown-load 7.5s linear forwards;
 }
 
 .fullscreen-bg {
@@ -832,6 +840,9 @@ a:focus-visible {
 .guest-card p { color: var(--color-muted); line-height: 1.5; }
 .room-code-label { margin-bottom: 3px; font-size: 0.8rem; letter-spacing: 0.16em; }
 .room-code { display: block; color: var(--color-cyan); font: 900 clamp(2.4rem, 9vw, 4.3rem) ui-monospace, monospace; letter-spacing: 0.14em; }
+.room-details { margin: 12px auto; }
+.room-invite-panel p { margin: 8px auto; font-size: 0.9rem; }
+.room-invite-panel strong { color: #e9fbff; overflow-wrap: anywhere; }
 #room-qr { width: min(50vw, 170px); margin: 12px auto; padding: 8px; border-radius: 12px; background: white; }
 #room-qr:empty { display: none; }
 #room-qr svg { display: block; width: 100%; height: auto; }
@@ -842,7 +853,7 @@ a:focus-visible {
 
 .guest-page {
     display: flex;
-    align-items: center;
+    align-items: safe center;
     justify-content: center;
     min-height: 100dvh;
     padding: 20px;
@@ -853,10 +864,38 @@ a:focus-visible {
 .join-form label { font-weight: 800; color: var(--color-cyan); }
 .join-form input { width: 100%; padding: 13px; border: 1px solid var(--color-cyan); border-radius: 10px; background: #061225; color: white; font: 800 1.6rem ui-monospace, monospace; letter-spacing: 0.18em; text-align: center; text-transform: uppercase; }
 .guest-room-line strong { color: var(--color-cyan); letter-spacing: 0.12em; }
-.guest-page #qr-reader { width: min(82vw, 420px); margin: 15px auto; }
+.guest-page #qr-reader { display: block; width: min(100%, 420px); max-width: 100%; margin: 15px auto; }
 .guest-page #guest-status { min-height: 3em; }
 .guest-page #guest-scan-again { margin: 10px auto; }
 .text-button { margin-top: 18px; border: 0; background: none; color: var(--color-cyan); font: inherit; text-decoration: underline; cursor: pointer; }
+
+@media (orientation: landscape) and (min-width: 700px) {
+    #host-screen { padding: clamp(10px, 1.8vh, 22px); overflow: hidden; }
+    #host-screen .room-card {
+        width: min(96vw, 1120px);
+        max-height: calc(100dvh - 24px);
+        padding: clamp(14px, 2.3vh, 30px);
+        overflow: hidden;
+    }
+    #host-screen .hero-badge { margin-bottom: clamp(5px, 1vh, 10px); }
+    #host-screen h1 { margin-bottom: clamp(4px, 1vh, 10px); font-size: clamp(1.55rem, 4.3vh, 2.7rem); }
+    #host-screen .room-card > p { margin: 0 auto; max-width: 760px; font-size: clamp(0.88rem, 1.9vh, 1.08rem); }
+    #host-screen .room-details {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 0.65fr);
+        align-items: center;
+        gap: clamp(16px, 3vw, 40px);
+        width: min(100%, 850px);
+        margin: clamp(8px, 2vh, 20px) auto;
+    }
+    #host-screen .room-code { font-size: clamp(2.3rem, 8vh, 5rem); }
+    #host-screen #room-status { min-height: 2.5em; margin: clamp(6px, 1.5vh, 14px) auto 0; }
+    #host-screen #room-qr { width: min(29vh, 220px); margin: 0 auto; }
+    #host-screen .room-invite-panel p { margin: clamp(4px, 1vh, 9px) auto; line-height: 1.25; font-size: clamp(0.78rem, 1.6vh, 0.95rem); }
+    #host-screen #room-link { font-size: clamp(0.8rem, 1.6vh, 0.95rem); }
+    #host-screen #room-error:empty { display: none; }
+    #host-screen #host-home-button { min-height: 42px; padding: 10px 20px; }
+}
 
 #wave-background {
     position: absolute;

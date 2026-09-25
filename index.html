@@ -31,7 +31,7 @@
                 </div>
             </section>
             <footer class="site-footer">
-                <p><strong>NO COMPATIBLE CON SAFARI</strong>. 2026. Por Alfredo, dedicado para el amor de su vida: Rebeca. 💖 · <span class="app-version" aria-label="Versión de la aplicación">v2026.3.1</span></p>
+                <p><strong>NO COMPATIBLE CON SAFARI</strong>. 2026. Por Alfredo, dedicado para el amor de su vida: Rebeca. 💖 · <span class="app-version" aria-label="Versión de la aplicación">v2026.3.2</span></p>
             </footer>
         </div>
 
@@ -40,12 +40,17 @@
                 <span class="hero-badge">MODO MULTIDEVICE</span>
                 <h1 id="room-title">Tu pantalla es el host</h1>
                 <p>Conecta esta pantalla a la TV o bocina. Cada persona escanea sus tarjetas desde su celular; aquí se reproducen las pistas.</p>
-                <div id="room-details" hidden>
-                    <p class="room-code-label">CÓDIGO DE SALA</p>
-                    <strong id="room-code" class="room-code"></strong>
-                    <div id="room-qr" aria-label="QR para unirse a la sala"></div>
-                    <a id="room-link" href="#">Abrir enlace para unirse</a>
-                    <p id="room-status" role="status">Esperando tarjetas...</p>
+                <div id="room-details" class="room-details" hidden>
+                    <div class="room-code-panel">
+                        <p class="room-code-label">CÓDIGO DE SALA</p>
+                        <strong id="room-code" class="room-code"></strong>
+                        <p id="room-status" role="status">Esperando tarjetas...</p>
+                    </div>
+                    <div class="room-invite-panel">
+                        <div id="room-qr" aria-label="QR para unirse a la sala"></div>
+                        <p>Escanea el QR o entra a <strong>backtothehitz.com/guest.html</strong> y usa el código.</p>
+                        <a id="room-link" href="#">Abrir enlace de la sala</a>
+                    </div>
                 </div>
                 <p id="room-error" role="alert"></p>
                 <button id="host-home-button" class="action-button secondary-button">← Regresar al inicio</button>

@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inviteUrl.search = `?room=${room.code}`;
         const link = document.getElementById('room-link');
         link.href = inviteUrl.href;
-        link.textContent = inviteUrl.href;
+        link.title = inviteUrl.href;
         const qrTarget = document.getElementById('room-qr');
         qrTarget.innerHTML = '';
         if (window.qrcode) {
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         warpSpeedSound.currentTime = 0;
         document.getElementById('player').classList.remove('ready');
         countdownMessage.classList.remove('visible');
-        countdownMessage.classList.remove('video-warming');
+        countdownMessage.classList.remove('video-playing');
         starfield.classList.remove('visible');
         waveBackground.classList.remove('visible');
         musicVisualizerContainer.classList.remove('visible');
@@ -530,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const generation = ++playbackGeneration;
         travelSoundFinished = playerReady = hiddenPlaybackStarted = false;
         countdownMessage.classList.add('visible');
+        countdownMessage.classList.remove('video-playing');
         starfield.classList.add('visible');
         document.getElementById('player').classList.remove('ready');
         showScreen(playerContainer);
@@ -599,6 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
             requestCaptionsOff(event);
         }
         if (event.data === YT.PlayerState.PLAYING && hiddenPlaybackStarted && preparationTimer === null) {
+            countdownMessage.classList.add('video-playing');
             preparationTimer = setTimeout(() => {
                 const playerElement = document.getElementById('player');
                 countdownMessage.classList.remove('visible');

@@ -34,6 +34,7 @@
             scanner = null;
         }
         reader.innerHTML = '';
+        reader.hidden = true;
     }
 
     async function submitScan(qr) {
@@ -53,6 +54,7 @@
 
     async function startFallbackCamera() {
         if (!navigator.mediaDevices?.getUserMedia || !window.jsQR) throw new Error('No se pudo abrir la cámara en este navegador.');
+        reader.hidden = false;
         const video = document.createElement('video');
         video.setAttribute('playsinline', 'true');
         video.muted = true;
@@ -80,6 +82,7 @@
 
     async function startCamera() {
         await stopCamera();
+        reader.hidden = false;
         handling = false;
         scanAgain.hidden = true;
         status.textContent = 'Apunta la cámara a una tarjeta.';

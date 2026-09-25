@@ -155,7 +155,9 @@ test('the video starts audibly after the travel sound and stays hidden for seven
     assert.equal(player.volume, 80);
     assert.equal(player.playCount, 1);
     assert.equal(app.element('player').classList.contains('ready'), false);
+    assert.equal(app.element('countdown-message').classList.contains('video-playing'), false);
     player.options.events.onStateChange({ data: 1, target: player });
+    assert.equal(app.element('countdown-message').classList.contains('video-playing'), true);
     [...app.timers.values()].find(timer => timer.delay === 7000).callback();
     assert.deepEqual(player.seeks, []);
     assert.equal(player.volume, 80);
