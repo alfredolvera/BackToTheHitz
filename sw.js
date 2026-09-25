@@ -1,4 +1,4 @@
-const CACHE_NAME = 'back-to-the-hitz-v34';
+const CACHE_NAME = 'back-to-the-hitz-v35';
 
 const URLS_TO_CACHE = [
   '/',
@@ -8,6 +8,8 @@ const URLS_TO_CACHE = [
   'rules.html',
   'style.css',
   'rules.css',
+  'fullscreen.css',
+  'fullscreen.js',
   'script.js',
   'manifest.json',
   'weblogo.png',

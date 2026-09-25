@@ -1,0 +1,45 @@
+.fullscreen-toggle {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    z-index: 500;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgba(53, 212, 255, 0.55);
+    border-radius: 12px;
+    background: rgba(9, 20, 43, 0.92);
+    color: #e8faff;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fullscreen-toggle:hover {
+    background: rgba(20, 55, 83, 0.97);
+}
+
+.fullscreen-toggle:focus-visible {
+    outline: 3px solid #35d4ff;
+    outline-offset: 3px;
+}
+
+.fullscreen-toggle svg {
+    width: 21px;
+    height: 21px;
+}
+
+.fullscreen-toggle .fullscreen-exit,
+.fullscreen-toggle.is-fullscreen .fullscreen-enter {
+    display: none;
+}
+
+.fullscreen-toggle.is-fullscreen .fullscreen-exit {
+    display: block;
+}
+
+.fullscreen-toggle[hidden] {
+    display: none !important;
+}
