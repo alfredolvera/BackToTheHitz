@@ -641,7 +641,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function shuffleTemporalYear() {
         let frame = 0;
-        const years = [1955, 1985, 2015, 1885, 2026];
+        const years = Array.from({ length: 2026 - 1885 + 1 }, (_, index) => 1885 + index);
+        for (let index = years.length - 1; index > 0; index--) {
+            const randomIndex = Math.floor(Math.random() * (index + 1));
+            [years[index], years[randomIndex]] = [years[randomIndex], years[index]];
+        }
         timesUpScreen.classList.remove('year-revealed');
         temporalYear.textContent = String(years[0]);
         yearShuffleTimer = setInterval(() => {
@@ -652,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(yearShuffleTimer);
                 yearShuffleTimer = null;
             } else {
-                temporalYear.textContent = String(years[frame % years.length]);
+                temporalYear.textContent = String(years[frame]);
             }
         }, 100);
     }

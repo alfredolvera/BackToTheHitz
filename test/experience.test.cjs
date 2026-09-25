@@ -199,7 +199,13 @@ test('the temporal year display keeps shuffling for 5 seconds', () => {
     [...app.timers.values()].find(timer => timer.delay === 70000).callback();
     const yearInterval = [...app.intervals.values()].find(interval => interval.delay === 100);
     assert.ok(yearInterval);
-    for (let step = 0; step < 49; step++) yearInterval.callback();
+    const displayedYears = [Number(app.element('temporal-year').textContent)];
+    for (let step = 0; step < 49; step++) {
+        yearInterval.callback();
+        displayedYears.push(Number(app.element('temporal-year').textContent));
+    }
+    assert.equal(new Set(displayedYears).size, 50);
+    assert.ok(displayedYears.every(year => year >= 1885 && year <= 2026));
     assert.notEqual(app.element('temporal-year').textContent, '????');
     yearInterval.callback();
     assert.equal(app.element('temporal-year').textContent, '????');
