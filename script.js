@@ -45,6 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const scannerScreen = document.getElementById('scanner-screen');
     const timesUpScreen = document.getElementById('times-up-screen');
     const countdownMessage = document.getElementById('countdown-message');
+    const travelSubtext = document.getElementById('travel-subtext');
+    const travelSpeedDigits = [document.getElementById('travel-speed-tens'), document.getElementById('travel-speed-ones')];
+    const speedSegments = ['abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg'];
     const clueTimer = document.getElementById('clue-timer');
     const clueTimeRemaining = document.getElementById('clue-time-remaining');
     const startScanButton = document.getElementById('start-scan-button');
@@ -84,8 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Variables de estado
     let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null, fadeStartTimer = null;
-    let volumeFadeTimer = null, yearShuffleTimer = null, clueTimerInterval = null;
+    let volumeFadeTimer = null, yearShuffleTimer = null, clueTimerInterval = null, travelSpeedInterval = null;
     let clueStartedAt = null;
+    let travelStartedAt = null, hiddenTravelStartedAt = null;
     let clueStartTime = 0, clueVolume = 100;
     let travelSoundFinished = false, playerReady = false, hiddenPlaybackStarted = false;
     let playbackGeneration = 0;
@@ -221,11 +225,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (volumeFadeTimer) clearInterval(volumeFadeTimer);
         if (yearShuffleTimer) clearInterval(yearShuffleTimer);
         if (clueTimerInterval) clearInterval(clueTimerInterval);
+        if (travelSpeedInterval) clearInterval(travelSpeedInterval);
         if (fadeStartTimer) clearTimeout(fadeStartTimer);
         if (preparationTimer) clearTimeout(preparationTimer);
         if (gameTimer) clearTimeout(gameTimer);
-        volumeFadeTimer = yearShuffleTimer = clueTimerInterval = fadeStartTimer = preparationTimer = gameTimer = null;
-        clueStartedAt = null;
+        volumeFadeTimer = yearShuffleTimer = clueTimerInterval = travelSpeedInterval = fadeStartTimer = preparationTimer = gameTimer = null;
+        clueStartedAt = travelStartedAt = hiddenTravelStartedAt = null;
         if (gamePlayer) gamePlayer.destroy();
         gamePlayer = null;
         window.myAppScope.pendingVideo = undefined;
@@ -239,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clueTimer.setAttribute('aria-hidden', 'true');
         clueTimer.style.setProperty('--clue-progress', '100%');
         clueTimeRemaining.textContent = '01:10';
+        setTravelSpeed(0);
         starfield.classList.remove('visible');
         waveBackground.classList.remove('visible');
         musicVisualizerContainer.classList.remove('visible');
@@ -539,6 +545,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function playVideo(videoId, videoCategory, startTime) {
         const generation = ++playbackGeneration;
         travelSoundFinished = playerReady = hiddenPlaybackStarted = false;
+        if (travelSpeedInterval) clearInterval(travelSpeedInterval);
+        travelSpeedInterval = null;
+        setTravelSpeed(0);
+        hiddenTravelStartedAt = null;
+        travelSubtext.textContent = ({
+            cine: 'Mira con atención. Adivina la película y el año.',
+            juego: 'Mira con atención. Adivina el videojuego y el año.',
+            musica_video: 'Mira y escucha. Adivina el video musical y el año.',
+            musica_audio: 'Prepara tus oídos. Adivina la canción y el año.'
+        })[videoCategory] || 'Mira y escucha. Adivina la obra y el año.';
         if (clueTimerInterval) clearInterval(clueTimerInterval);
         clueTimerInterval = null;
         clueTimer.classList.remove('visible');
@@ -554,9 +570,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen(playerContainer);
         scanAgainButton.classList.add('visible');
         warpSpeedSound.currentTime = 0;
+        travelStartedAt = Date.now();
+        travelSpeedInterval = setInterval(updateTravelSpeed, 50);
         const finishSound = () => {
             if (generation !== playbackGeneration || travelSoundFinished) return;
             travelSoundFinished = true;
+            setTravelSpeed(57);
             startHiddenPlayback();
         };
         warpSpeedSound.onended = finishSound;
@@ -570,6 +589,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const soundPromise = warpSpeedSound.play();
             if (soundPromise && typeof soundPromise.catch === 'function') soundPromise.catch(finishSound);
         } catch (error) { finishSound(); }
+    }
+
+    function setTravelSpeed(speed) {
+        const digits = String(Math.max(0, Math.min(88, Math.round(speed)))).padStart(2, '0');
+        travelSpeedDigits.forEach((digitElement, index) => {
+            const digit = digits[index];
+            digitElement.setAttribute('data-digit', digit);
+            digitElement.querySelectorAll('path').forEach(path => {
+                path.classList.toggle('dimmed', !speedSegments[Number(digit)].includes(path.getAttribute('data-segment')));
+            });
+        });
+    }
+
+    function updateTravelSpeed() {
+        if (travelStartedAt === null) return;
+        if (travelSoundFinished) {
+            const hiddenProgress = hiddenTravelStartedAt === null ? 0 : Math.min(1, (Date.now() - hiddenTravelStartedAt) / 7000);
+            setTravelSpeed(57 + 31 * hiddenProgress);
+            return;
+        }
+        const duration = Number.isFinite(warpSpeedSound.duration) && warpSpeedSound.duration > 0
+            ? warpSpeedSound.duration : 2.612;
+        const progress = Math.min(1, Math.max(warpSpeedSound.currentTime / duration, (Date.now() - travelStartedAt) / (duration * 1000)));
+        setTravelSpeed(progress * 57);
     }
 
     function loadYouTubeAPIScript(){
@@ -619,10 +662,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (event.data === YT.PlayerState.PLAYING && hiddenPlaybackStarted && preparationTimer === null) {
             countdownMessage.classList.add('video-playing');
+            hiddenTravelStartedAt = Date.now();
             clueStartedAt = Date.now();
             updateClueTimer();
             clueTimerInterval = setInterval(updateClueTimer, 250);
             preparationTimer = setTimeout(() => {
+                if (travelSpeedInterval) clearInterval(travelSpeedInterval);
+                travelSpeedInterval = null;
+                setTravelSpeed(88);
                 const playerElement = document.getElementById('player');
                 countdownMessage.classList.remove('visible');
                 starfield.classList.remove('visible');

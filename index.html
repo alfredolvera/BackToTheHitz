@@ -31,7 +31,7 @@
                 </div>
             </section>
             <footer class="site-footer">
-                <p><strong>NO COMPATIBLE CON SAFARI</strong>. 2026. Por Alfredo, dedicado para el amor de su vida: Rebeca. 💖 · <span class="app-version" aria-label="Versión de la aplicación">v2026.3.6</span></p>
+                <p><strong>NO COMPATIBLE CON SAFARI</strong>. 2026. Por Alfredo, dedicado para el amor de su vida: Rebeca. 💖 · <span class="app-version" aria-label="Versión de la aplicación">v2026.3.7</span></p>
             </footer>
         </div>
 
@@ -81,20 +81,23 @@
             </div>
             <div id="player"></div>
             <div id="click-blocker"></div>
-            <div id="clue-timer" class="clue-timer" role="timer" aria-label="Tiempo restante para adivinar" aria-hidden="true">
-                <div class="clue-timer-heading"><span>TIEMPO PARA ADIVINAR</span><strong id="clue-time-remaining">01:10</strong></div>
-                <div class="clue-timer-track" aria-hidden="true"><span class="clue-timer-fill"></span></div>
-            </div>
             <div id="countdown-message" class="screen-overlay">
                 <div class="countdown-text-container">
                     <div class="travel-lights" aria-hidden="true"><i></i><i></i><i></i></div>
                     <span class="small-text">CONDENSADOR DE FLUJO ACTIVADO</span>
                     <span class="travel-lcd" aria-hidden="true">
-                        <svg viewBox="0 0 156 124" fill="currentColor"><defs><g id="travel-eight"><path d="M13 2h45l8 7-8 7H13L5 9zM13 53h45l8 7-8 7H13l-8-7zM13 105h45l8 7-8 7H13l-8-7zM3 12l8 7v31l-8 7-5-7V19zM68 12l5 7v31l-5 7-8-7V19zM3 65l8 7v30l-8 7-5-7V72zM68 65l5 7v30l-5 7-8-7V72z"/></g></defs><use href="#travel-eight" x="2"/><use href="#travel-eight" x="80"/></svg>
+                        <svg viewBox="0 0 156 124" fill="currentColor">
+                            <g id="travel-speed-tens" class="travel-digit" transform="translate(2 0)">
+                                <path data-segment="a" d="M13 2h45l8 7-8 7H13L5 9z"/><path data-segment="b" d="M68 12l5 7v31l-5 7-8-7V19z"/><path data-segment="c" d="M68 65l5 7v30l-5 7-8-7V72z"/><path data-segment="d" d="M13 105h45l8 7-8 7H13l-8-7z"/><path data-segment="e" d="M3 65l8 7v30l-8 7-5-7V72z"/><path data-segment="f" d="M3 12l8 7v31l-8 7-5-7V19z"/><path data-segment="g" d="M13 53h45l8 7-8 7H13l-8-7z"/>
+                            </g>
+                            <g id="travel-speed-ones" class="travel-digit" transform="translate(80 0)">
+                                <path data-segment="a" d="M13 2h45l8 7-8 7H13L5 9z"/><path data-segment="b" d="M68 12l5 7v31l-5 7-8-7V19z"/><path data-segment="c" d="M68 65l5 7v30l-5 7-8-7V72z"/><path data-segment="d" d="M13 105h45l8 7-8 7H13l-8-7z"/><path data-segment="e" d="M3 65l8 7v30l-8 7-5-7V72z"/><path data-segment="f" d="M3 12l8 7v31l-8 7-5-7V19z"/><path data-segment="g" d="M13 53h45l8 7-8 7H13l-8-7z"/>
+                            </g>
+                        </svg>
                         <small>MPH</small>
                     </span>
                     <span class="large-text">Viajando en el tiempo</span>
-                    <span class="travel-subtext">Prepara tus oídos. La pista está por aparecer.</span>
+                    <span id="travel-subtext" class="travel-subtext">La pista está por aparecer.</span>
                 </div>
             </div>
         </div>
@@ -116,6 +119,11 @@
             </section>
         </div>
     </main>
+
+    <div id="clue-timer" class="clue-timer" role="timer" aria-label="Tiempo restante para adivinar" aria-hidden="true">
+        <div class="clue-timer-heading"><span>TIEMPO PARA ADIVINAR</span><strong id="clue-time-remaining">01:10</strong></div>
+        <div class="clue-timer-track" aria-hidden="true"><span class="clue-timer-fill"></span></div>
+    </div>
 
     <button id="fullscreen-toggle" class="fullscreen-toggle" type="button" aria-label="Activar pantalla completa" aria-pressed="false" title="Activar pantalla completa">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

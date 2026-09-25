@@ -754,6 +754,9 @@ a:focus-visible {
     filter: drop-shadow(0 0 8px rgba(255, 43, 31, 0.95));
 }
 
+.travel-digit path { transition: opacity 0.05s linear; }
+.travel-digit path.dimmed { opacity: 0.07; }
+
 .travel-lcd small {
     font: 900 clamp(0.9rem, 2.2vw, 1.4rem) ui-monospace, monospace;
     letter-spacing: 0.12em;
@@ -788,17 +791,18 @@ a:focus-visible {
 
 .clue-timer {
     --clue-progress: 100%;
-    position: absolute;
+    position: fixed;
     left: clamp(16px, 3vw, 48px);
-    bottom: clamp(18px, 3vh, 32px);
-    z-index: 12;
-    width: min(530px, calc(100% - 32px));
+    right: clamp(16px, 3vw, 48px);
+    bottom: 90px;
+    z-index: 160;
+    width: auto;
     padding: 14px 18px 16px;
-    border: 1px solid rgba(101, 183, 232, 0.55);
+    border: 2px solid rgba(101, 183, 232, 0.8);
     border-radius: 12px;
-    background: rgba(4, 11, 24, 0.91);
+    background: rgba(4, 11, 24, 0.96);
     color: #e9f7ff;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(41, 147, 241, 0.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 22px rgba(31, 167, 255, 0.35), inset 0 0 20px rgba(41, 147, 241, 0.08);
     opacity: 0;
     pointer-events: none;
     transform: translateY(12px);
@@ -831,7 +835,7 @@ a:focus-visible {
 }
 
 .clue-timer-track {
-    height: 11px;
+    height: 15px;
     overflow: hidden;
     border: 1px solid rgba(77, 130, 169, 0.44);
     border-radius: 999px;

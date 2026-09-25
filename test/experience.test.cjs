@@ -29,7 +29,18 @@ function loadApp(options = {}) {
                 addEventListener(name, callback) { this[name] = callback; },
                 removeEventListener() {},
                 appendChild() {},
-                setAttribute() {},
+                attributes: {},
+                setAttribute(name, value) { this.attributes[name] = value; },
+                getAttribute(name) {
+                    return name === 'data-segment' && id.includes('-segment-')
+                        ? id.slice(-1)
+                        : this.attributes[name];
+                },
+                querySelectorAll(selector) {
+                    return selector === 'path' && id.startsWith('travel-speed-')
+                        ? [...'abcdefg'].map(segment => element(`${id}-segment-${segment}`))
+                        : [];
+                },
                 play() { return Promise.resolve(); },
                 pause() {},
                 textContent: ''
@@ -78,7 +89,7 @@ function loadApp(options = {}) {
         window, document,
         sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
         navigator: { userAgent: 'Chrome' },
-        Audio: class { constructor() { audios.push(this); } play() { this.playCount = (this.playCount || 0) + 1; return Promise.resolve(); } pause() {}; currentTime = 0; },
+        Audio: class { constructor() { audios.push(this); } play() { this.playCount = (this.playCount || 0) + 1; return Promise.resolve(); } pause() {}; currentTime = 0; duration = 2.612; },
         YT: { Player, PlayerState: { PLAYING: 1 } }, Html5Qrcode,
         fetch: options.fetch || (() => Promise.resolve({ json: () => Promise.resolve({}) })),
         setTimeout(callback, delay) { const id = nextTimer++; timers.set(id, { callback, delay }); return id; },
@@ -167,6 +178,55 @@ test('the video starts audibly after the travel sound and stays hidden for seven
     assert.equal(player.volume, 80);
     assert.equal(app.element('player').classList.contains('ready'), true);
     assert.equal(app.element('countdown-message').classList.contains('visible'), false);
+});
+
+test('the speedometer rises from 00 to 88 MPH across the full travel sequence', () => {
+    const app = loadApp();
+    app.window.myAppScope.playVideo('abcdefghijk', 'cine', null);
+    assert.equal(app.element('travel-speed-tens').getAttribute('data-digit'), '0');
+    assert.equal(app.element('travel-speed-ones').getAttribute('data-digit'), '0');
+    assert.equal(app.element('travel-speed-tens-segment-g').classList.contains('dimmed'), true);
+    const speedTick = [...app.intervals.values()].find(item => item.delay === 50);
+    assert.ok(speedTick);
+    app.audios[0].currentTime = app.audios[0].duration / 2;
+    speedTick.callback();
+    assert.equal(app.element('travel-speed-tens').getAttribute('data-digit'), '2');
+    assert.equal(app.element('travel-speed-ones').getAttribute('data-digit'), '9');
+    app.audios[0].onended();
+    assert.equal(app.element('travel-speed-tens').getAttribute('data-digit'), '5');
+    assert.equal(app.element('travel-speed-ones').getAttribute('data-digit'), '7');
+    const player = app.players[1];
+    player.options.events.onReady({ target: player });
+    player.options.events.onStateChange({ data: 1, target: player });
+    app.advance(3500);
+    speedTick.callback();
+    assert.equal(app.element('travel-speed-tens').getAttribute('data-digit'), '7');
+    assert.equal(app.element('travel-speed-ones').getAttribute('data-digit'), '3');
+    app.advance(3500);
+    [...app.timers.values()].find(item => item.delay === 7000).callback();
+    assert.equal(app.element('travel-speed-tens').getAttribute('data-digit'), '8');
+    assert.equal(app.element('travel-speed-ones').getAttribute('data-digit'), '8');
+    assert.equal(app.element('travel-speed-tens-segment-g').classList.contains('dimmed'), false);
+    assert.equal([...app.intervals.values()].some(item => item.delay === 50), false);
+});
+
+test('travel instruction matches music, film, or game clues', () => {
+    const expected = {
+        cine: 'Mira con atención. Adivina la película y el año.',
+        juego: 'Mira con atención. Adivina el videojuego y el año.',
+        musica_video: 'Mira y escucha. Adivina el video musical y el año.',
+        musica_audio: 'Prepara tus oídos. Adivina la canción y el año.'
+    };
+    for (const [category, copy] of Object.entries(expected)) {
+        const app = loadApp();
+        app.window.myAppScope.playVideo('abcdefghijk', category, null);
+        assert.equal(app.element('travel-subtext').textContent, copy);
+    }
+});
+
+test('the clue timer lives outside the YouTube player container so it can overlay the video', () => {
+    const markup = fs.readFileSync('index.html', 'utf8');
+    assert.ok(markup.indexOf('id="clue-timer"') > markup.indexOf('</main>'));
 });
 
 test('video and music show the remaining 70-second clue time only after the travel overlay clears', () => {
