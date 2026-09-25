@@ -4,7 +4,7 @@ window.onYouTubeIframeAPIReady = function() {
     console.log("YouTube API is ready.");
     new YT.Player('background-player', {
         videoId: 'hsOOCgmjR0k',
-        playerVars: { 'autoplay': 1, 'controls': 0, 'loop': 1, 'playlist': 'hsOOCgmjR0k', 'mute': 1, 'showinfo': 0, 'modestbranding': 1, 'playsinline': 1 },
+        playerVars: { 'autoplay': 1, 'controls': 0, 'loop': 1, 'playlist': 'hsOOCgmjR0k', 'mute': 1, 'cc_load_policy': 0, 'playsinline': 1 },
         events: { 'onReady': (event) => event.target.playVideo() }
     });
     const appScope = window.myAppScope;
@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scanAgainButton = document.getElementById('scan-again-button');
     const qrStatusElement = document.getElementById('qr-reader-status');
     const starfield = document.getElementById('starfield');
+    const temporalYear = document.getElementById('temporal-year');
     const warpSpeedSound = new Audio('effect.mp3');
 
     // --- LÓGICA PARA AUTOPLAY DE MÚSICA DE FONDO ---
@@ -60,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Variables de estado
     let qrScanner, gamePlayer, preparationTimer = null, gameTimer = null;
+    let volumeFadeTimer = null, yearShuffleTimer = null;
     let currentGameCategory = null;
     let replacements = {};
     let lastCameraId = null;
@@ -84,6 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function startScanning() {
         backgroundMusic.pause(); // Detener música de fondo
+        if (volumeFadeTimer) clearInterval(volumeFadeTimer);
+        if (yearShuffleTimer) clearInterval(yearShuffleTimer);
+        volumeFadeTimer = null;
+        yearShuffleTimer = null;
         if (gamePlayer) gamePlayer.destroy();
         if (preparationTimer) clearTimeout(preparationTimer);
         if (gameTimer) clearTimeout(gameTimer);
@@ -99,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
         musicVisualizerContainer.classList.remove('visible');
         vinylRecord.classList.remove('spinning');
         scanAgainButton.classList.remove('visible');
+        temporalYear.textContent = '1985';
+        timesUpScreen.classList.remove('year-revealed');
         showScreen(scannerScreen);
         qrStatusElement.textContent = "Buscando una tarjeta en la línea del tiempo...";
         await stopScanner();
@@ -314,9 +322,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getScannerBoxSize() {
-        const shortestViewportSide = Math.min(window.innerWidth, window.innerHeight);
-        const comfortableSize = Math.round(shortestViewportSide * 0.68);
-        return Math.max(220, Math.min(comfortableSize, 360));
+        const reader = document.getElementById('qr-reader');
+        const readerSize = reader.clientWidth || Math.min(window.innerWidth, window.innerHeight);
+        return Math.max(40, Math.min(Math.round(readerSize * 0.72), readerSize - 12, 360));
     }
 
     async function onScanSuccess(decodedText) {
@@ -381,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         countdownMessage.classList.add('visible');
         starfield.classList.add('visible');
         warpSpeedSound.play();
-        const playerVars = { 'autoplay': 1, 'mute': 0, 'controls': 1, 'rel': 0 };
+        const playerVars = { 'autoplay': 1, 'mute': 0, 'controls': 1, 'rel': 0, 'cc_load_policy': 0 };
         if (startTime) playerVars.start = parseInt(startTime, 10);
         gamePlayer = new YT.Player('player', { videoId: videoId, playerVars: playerVars, events: { 'onStateChange': onPlayerStateChange } });
     }
@@ -415,6 +423,42 @@ document.addEventListener('DOMContentLoaded', () => {
         musicVisualizerContainer.classList.remove('visible');
         vinylRecord.classList.remove('spinning');
         showScreen(timesUpScreen);
+        shuffleTemporalYear();
+        fadeOutGamePlayer();
+    }
+
+    function shuffleTemporalYear() {
+        let frame = 0;
+        const years = [1955, 1985, 2015, 1885, 2026];
+        timesUpScreen.classList.remove('year-revealed');
+        temporalYear.textContent = String(years[0]);
+        yearShuffleTimer = setInterval(() => {
+            frame += 1;
+            if (frame >= 20) {
+                temporalYear.textContent = '????';
+                timesUpScreen.classList.add('year-revealed');
+                clearInterval(yearShuffleTimer);
+                yearShuffleTimer = null;
+            } else {
+                temporalYear.textContent = String(years[frame % years.length]);
+            }
+        }, 90);
+    }
+
+    function fadeOutGamePlayer() {
+        if (!gamePlayer || typeof gamePlayer.getVolume !== 'function') return;
+        const player = gamePlayer;
+        const startVolume = player.getVolume();
+        let step = 0;
+        volumeFadeTimer = setInterval(() => {
+            step += 1;
+            player.setVolume(Math.max(0, Math.round(startVolume * (1 - step / 20))));
+            if (step >= 20) {
+                clearInterval(volumeFadeTimer);
+                volumeFadeTimer = null;
+                player.pauseVideo();
+            }
+        }, 75);
     }
 
     startScanButton.addEventListener('click', startScanning);

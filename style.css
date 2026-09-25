@@ -314,6 +314,23 @@ a:focus-visible {
     object-fit: cover;
 }
 
+#qr-reader__scan_region {
+    position: absolute !important;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden;
+}
+
+#qr-reader video {
+    position: absolute;
+    inset: 0;
+    display: block;
+    max-width: none !important;
+    max-height: none !important;
+}
+
 #qr-reader.firefox-rotate-preview video {
     transform: rotate(90deg);
 }
@@ -482,46 +499,114 @@ a:focus-visible {
 }
 
 #times-up-screen {
-    gap: 24px;
+    isolation: isolate;
+    overflow: hidden;
     background:
-        radial-gradient(circle at 20% 10%, rgba(255, 193, 7, 0.28), transparent 30%),
-        radial-gradient(circle at 86% 76%, rgba(231, 60, 126, 0.3), transparent 34%),
-        linear-gradient(135deg, #050713, #0c143c 52%, #170314);
+        radial-gradient(ellipse at 50% 42%, rgba(255, 158, 28, 0.15), transparent 38%),
+        linear-gradient(180deg, #07132b 0%, #050611 68%, #0c0614 100%);
+}
+
+#times-up-screen::before {
+    content: '';
+    position: absolute;
+    inset: 48% -40% -42%;
+    z-index: -1;
+    background:
+        repeating-linear-gradient(90deg, transparent 0 11%, rgba(35, 213, 255, 0.25) 11.1% 11.3%, transparent 11.4% 22%),
+        repeating-linear-gradient(0deg, transparent 0 11%, rgba(35, 213, 255, 0.24) 11.1% 11.3%, transparent 11.4% 22%);
+    transform: perspective(420px) rotateX(64deg) scale(1.6);
+    transform-origin: center top;
+    mask-image: linear-gradient(transparent, black 35%, black 72%, transparent);
+    animation: timeline-grid 3s linear infinite;
+}
+
+#times-up-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(circle at 50% 48%, transparent 8%, rgba(3, 3, 10, 0.58) 78%);
+    pointer-events: none;
 }
 
 .times-up-card {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(24px, 4vw, 46px);
-    width: min(94vw, 1040px);
-    min-height: min(68vh, 520px);
-    padding: clamp(18px, 4vw, 34px);
-    border: 1px solid rgba(255, 193, 7, 0.34);
+    gap: clamp(22px, 4vh, 36px);
+    width: min(92vw, 850px);
+    padding: clamp(24px, 5vw, 48px);
+    border: 1px solid rgba(35, 213, 255, 0.4);
     border-radius: var(--radius-lg);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.035));
-    box-shadow: 0 0 42px rgba(255, 193, 7, 0.2), var(--shadow-panel);
-    backdrop-filter: blur(10px);
+    background: linear-gradient(155deg, rgba(9, 27, 55, 0.92), rgba(4, 6, 20, 0.93));
+    box-shadow: 0 0 58px rgba(35, 213, 255, 0.16), inset 0 0 40px rgba(35, 213, 255, 0.07), var(--shadow-panel);
+    backdrop-filter: blur(16px);
+}
+
+.temporal-display {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: min(100%, 520px);
+    padding: clamp(16px, 3vw, 28px);
+    border: 2px solid #e9842b;
+    border-radius: 13px;
+    color: #ffbd68;
+    background: linear-gradient(180deg, #080d15, #150b0d);
+    box-shadow: inset 0 0 25px rgba(255, 120, 24, 0.15), 0 0 12px rgba(255, 128, 23, 0.7), 0 0 50px rgba(255, 128, 23, 0.25);
+}
+
+.temporal-display::before,
+.temporal-display::after {
+    content: '';
+    position: absolute;
+    top: 13px;
+    bottom: 13px;
+    width: 5px;
+    border-top: 5px solid var(--color-cyan);
+    border-bottom: 5px solid var(--color-cyan);
+}
+
+.temporal-display::before { left: 10px; }
+.temporal-display::after { right: 10px; }
+
+.temporal-display-label,
+.temporal-display-status {
+    font-size: clamp(0.68rem, 1.7vw, 0.88rem);
+    font-weight: 900;
+    letter-spacing: 0.18em;
+}
+
+.temporal-display-status {
+    color: var(--color-cyan);
+}
+
+.temporal-year {
+    display: block;
+    min-width: 4.6ch;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: clamp(4rem, 17vw, 8.7rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.03em;
+    text-align: center;
+    text-shadow: 0 0 12px rgba(255, 142, 43, 0.88), 0 0 34px rgba(255, 107, 17, 0.55);
+}
+
+.year-revealed .temporal-year {
+    animation: year-lock 1.2s ease-out both;
 }
 
 .times-up-copy {
     display: flex;
-    flex: 1 1 420px;
     flex-direction: column;
     justify-content: center;
-    max-width: 520px;
-    text-align: left;
-}
-
-.times-up-image {
-    flex: 0 1 48%;
-    width: min(48%, 520px);
-    height: auto;
-    margin-bottom: 0;
-    border: 2px solid rgba(35, 213, 255, 0.5);
-    border-radius: var(--radius-md);
-    box-shadow: 0 0 26px rgba(35, 213, 255, 0.28), 0 18px 34px rgba(0, 0, 0, 0.48);
+    max-width: 720px;
+    text-align: center;
 }
 
 #times-up-screen h1 {
@@ -537,19 +622,19 @@ a:focus-visible {
 
 #times-up-screen .line-one {
     color: var(--color-text);
-    font-size: clamp(1.8rem, 5vw, 3.2rem);
+    font-size: clamp(1.6rem, 4vw, 3rem);
 }
 
 #times-up-screen .line-two {
     margin-top: 10px;
     color: var(--color-primary);
-    font-size: clamp(2.2rem, 7vw, 4.4rem);
+    font-size: clamp(2rem, 6vw, 4rem);
     font-weight: 900;
 }
 
 .times-up-hint {
     max-width: 620px;
-    margin: 16px 0 0;
+    margin: 18px auto 0;
     color: var(--color-muted);
     font-size: clamp(1rem, 2vw, 1.18rem);
     line-height: 1.5;
@@ -573,7 +658,7 @@ a:focus-visible {
 #countdown-message {
     z-index: 11;
     color: var(--color-text);
-    background: radial-gradient(circle at center, rgba(35, 213, 255, 0.08), rgba(0, 0, 0, 0.38));
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.45) 76%);
 }
 
 .countdown-text-container {
@@ -584,7 +669,7 @@ a:focus-visible {
     padding: clamp(24px, 5vw, 44px);
     border: 1px solid rgba(255, 193, 7, 0.42);
     border-radius: var(--radius-lg);
-    background: rgba(3, 3, 10, 0.68);
+    background: rgba(3, 8, 23, 0.76);
     box-shadow: 0 0 40px rgba(255, 193, 7, 0.22), var(--shadow-panel);
     backdrop-filter: blur(10px);
 }
@@ -644,30 +729,34 @@ a:focus-visible {
     position: absolute;
     inset: 0;
     display: block;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    animation-name: zoom-and-fade;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
+}
+
+#starfield {
+    overflow: hidden;
+    background: radial-gradient(circle at center, #2e87a2 0%, #0c3157 9%, #070b22 36%, #03030a 75%);
 }
 
 #stars1 {
-    background-image: radial-gradient(1px 1px at 20px 30px, #eee, transparent), radial-gradient(1px 1px at 40px 70px, #fff, transparent), radial-gradient(1px 1px at 50px 160px, #ddd, transparent), radial-gradient(2px 2px at 90px 40px, #fff, transparent), radial-gradient(2px 2px at 130px 80px, #fff, transparent), radial-gradient(2px 2px at 160px 120px, #ddd, transparent);
-    background-size: 200px 200px;
-    animation-duration: 2s;
+    inset: -65%;
+    background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(35, 213, 255, 0.38) 0deg 0.8deg, transparent 1.2deg 15deg);
+    mask-image: radial-gradient(circle, transparent 0 9%, black 15% 52%, transparent 78%);
+    animation: tunnel-turn 14s linear infinite;
 }
 
 #stars2 {
-    background-image: radial-gradient(1px 1px at 10px 90px, #eee, transparent), radial-gradient(2px 2px at 30px 50px, #fff, transparent), radial-gradient(2px 2px at 70px 200px, #ddd, transparent), radial-gradient(2px 2px at 100px 150px, #fff, transparent), radial-gradient(1px 1px at 140px 110px, #fff, transparent), radial-gradient(2px 2px at 180px 60px, #ddd, transparent);
-    background-size: 250px 250px;
-    animation-duration: 3s;
+    inset: -35%;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle at center, transparent 0 8%, rgba(255, 193, 7, 0.58) 8.2% 8.6%, transparent 9% 17%);
+    mask-image: radial-gradient(circle, transparent 0 12%, black 20% 63%, transparent 76%);
+    animation: tunnel-rush 2.3s ease-in infinite;
 }
 
 #stars3 {
-    background-image: radial-gradient(2px 2px at 5px 150px, #eee, transparent), radial-gradient(3px 3px at 80px 30px, #fff, transparent), radial-gradient(2px 2px at 120px 220px, #ddd, transparent), radial-gradient(3px 3px at 190px 180px, #fff, transparent), radial-gradient(2px 2px at 240px 90px, #fff, transparent), radial-gradient(3px 3px at 220px 20px, #ddd, transparent);
-    background-size: 300px 300px;
-    animation-duration: 4s;
+    inset: 32%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #d4fbff 0%, #23d5ff 13%, rgba(35, 213, 255, 0.56) 29%, transparent 62%);
+    filter: blur(8px);
+    animation: flux-pulse 1.5s ease-in-out infinite alternate;
 }
 
 #scan-again-button {
@@ -733,10 +822,28 @@ a:focus-visible {
     50% { background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom, center 100%; }
 }
 
-@keyframes zoom-and-fade {
-    0% { transform: scale(0.1); opacity: 0; }
-    10% { opacity: 1; }
-    100% { transform: scale(2.5); opacity: 0; }
+@keyframes tunnel-turn {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes tunnel-rush {
+    from { transform: scale(0.45); opacity: 0.25; }
+    to { transform: scale(1.5); opacity: 0.9; }
+}
+
+@keyframes flux-pulse {
+    from { transform: scale(0.7); opacity: 0.55; }
+    to { transform: scale(1.2); opacity: 0.95; }
+}
+
+@keyframes timeline-grid {
+    to { background-position: 0 0, 0 100px; }
+}
+
+@keyframes year-lock {
+    0% { transform: scale(1.2); filter: brightness(2); }
+    55% { transform: scale(0.96); filter: brightness(1.5); }
+    100% { transform: scale(1); filter: brightness(1); }
 }
 
 @keyframes wave-pulse {
@@ -772,9 +879,6 @@ a:focus-visible {
         padding: 20px 40px;
     }
 
-    .times-up-image {
-        max-width: 400px;
-    }
 }
 
 @media (max-width: 560px) {
