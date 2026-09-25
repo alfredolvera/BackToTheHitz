@@ -794,7 +794,7 @@ a:focus-visible {
     position: fixed;
     left: clamp(16px, 3vw, 48px);
     right: clamp(16px, 3vw, 48px);
-    bottom: 90px;
+    bottom: clamp(16px, 3vh, 28px);
     z-index: 160;
     width: auto;
     padding: 14px 18px 16px;
@@ -895,9 +895,9 @@ a:focus-visible {
 }
 
 #scan-again-button {
-    position: absolute;
-    right: 25px;
-    bottom: 25px;
+    position: fixed;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
     z-index: 150;
     display: none;
 }
@@ -1190,7 +1190,7 @@ a:focus-visible {
 }
 
 @media (max-width: 760px) {
-    .clue-timer { left: 16px; bottom: 88px; }
+    .clue-timer { left: 16px; right: 16px; }
 }
 
 @media (max-width: 560px) {
@@ -1211,8 +1211,6 @@ a:focus-visible {
     }
 
     #scan-again-button {
-        right: 16px;
-        bottom: 16px;
         padding-inline: 18px;
     }
 
@@ -1226,9 +1224,7 @@ a:focus-visible {
 }
 
 @media (max-width: 410px) {
-    .clue-timer { bottom: 142px; }
-    #scan-again-button { bottom: 78px; }
-    #times-up-screen .times-up-card { padding-bottom: 145px; }
+    #times-up-screen .times-up-card { padding-bottom: 92px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
